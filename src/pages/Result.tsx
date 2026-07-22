@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store'
 import BracketTree from '../components/BracketTree'
@@ -8,7 +8,6 @@ const accent = '#1db954'
 export default function Result() {
   const navigate = useNavigate()
   const { rounds, singer } = useStore()
-  const exportRef = useRef<HTMLDivElement>(null)
   const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
@@ -27,54 +26,14 @@ export default function Result() {
   const totalMin = Math.round(totalMs / 60000)
 
   const handleExport = async () => {
-    if (!exportRef.current) return
     setExporting(true)
     try {
-      const html2canvas = (await import('html2canvas')).default
-      const QRCode = (await import('qrcode')).default
-
-      const canvas = await html2canvas(exportRef.current, {
-        backgroundColor: '#0b0b13',
-        scale: 2,
-      })
-
-      // Add QR code and branding footer
-      const qrCanvas = document.createElement('canvas')
-      await QRCode.toCanvas(qrCanvas, window.location.origin + '/', { width: 100, margin: 1 })
-
-      const footerH = 80
-      const finalCanvas = document.createElement('canvas')
-      finalCanvas.width = canvas.width
-      finalCanvas.height = canvas.height + footerH
-      const ctx = finalCanvas.getContext('2d')!
-
-      ctx.fillStyle = '#0b0b13'
-      ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height)
-      ctx.drawImage(canvas, 0, 0)
-
-      // Footer divider
-      ctx.strokeStyle = 'rgba(255,255,255,0.1)'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(24, canvas.height)
-      ctx.lineTo(finalCanvas.width - 24, canvas.height)
-      ctx.stroke()
-
-      // QR code
-      ctx.drawImage(qrCanvas, finalCanvas.width - 130, canvas.height + 10, 64, 64)
-
-      // Branding text
-      ctx.fillStyle = 'rgba(255,255,255,0.4)'
-      ctx.font = '13px sans-serif'
-      ctx.textAlign = 'left'
-      ctx.fillText('音乐淘汰赛', 24, canvas.height + 32)
-      ctx.font = '10px sans-serif'
-      ctx.fillStyle = 'rgba(255,255,255,0.2)'
-      ctx.fillText('echoesvs.site', 24, canvas.height + 50)
+      const { buildShareImage } = await import('../lib/share')
+      const blob = await buildShareImage(singer.name, rounds, champion)
 
       const link = document.createElement('a')
-      link.download = `${singer.name}-音乐淘汰赛.png`
-      link.href = finalCanvas.toDataURL()
+      link.download = `${singer.name}-音乐淘汰赛.jpg`
+      link.href = URL.createObjectURL(blob)
       link.click()
     } finally {
       setExporting(false)
@@ -96,7 +55,7 @@ export default function Result() {
         </div>
 
         {/* EXPORTABLE AREA */}
-        <div ref={exportRef} style={{
+        <div style={{
           background: 'linear-gradient(180deg, #111118 0%, #0b0b13 100%)',
           borderRadius: 24, padding: '40px 28px 32px',
           border: '1px solid rgba(255,255,255,0.06)',
