@@ -1,5 +1,32 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+// Patterns from musiccup.app — filter live versions, instrumentals, junk
+const LIVE = [
+  /[(\[（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
+  /\blive\s+(at|from|in|on|@)\b/i,
+  /[-–—~]\s*live\b/i,
+  /\blive\s*(version|ver\.?|session|edit|recording|album)\b/i,
+  /\b(in concert|unplugged)\b/i,
+  /(现场|現場|演唱会|演唱會|音乐会|音樂會|音乐节|音樂節|live版|巡回|巡迴|巡演|不插电|不插電|演奏会|演奏會)/i,
+]
+const JUNK = [
+  /(\binstrumental\b|伴奏|卡拉OK|karaoke|off\s?vocal|纯音乐|純音樂|\bcommentary\b|\bvoice memo\b)/i,
+  /([(\[（【][^)\]）】]*remix[^)\]）】]*[)\]）】)/i,
+]
+
+function isLive(name: string, album: string): boolean {
+  const s = `${name} ${album}`
+  return LIVE.some(re => re.test(s))
+}
+
+function isJunk(name: string): boolean {
+  return JUNK.some(re => re.test(name))
+}
+
+function cleanName(name: string): string {
+  return name.replace(/\s*[(\[（【][^)\]）】]*[)\]）】]/g, ' ').replace(/\s+/g, ' ').trim() || name
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { id, name } = req.query as { id: string; name?: string }
   if (!id) return res.status(400).json({ error: 'missing id' })
@@ -8,7 +35,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const allSongs: any[] = []
     const seen = new Set<number>()
 
-    // Fetch from cn + tw stores
     for (const store of ['cn', 'tw']) {
       try {
         const url = `https://itunes.apple.com/lookup?id=${id}&entity=song&limit=200&country=${store}`
@@ -17,12 +43,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const data: any = await r.json()
         for (const t of data.results || []) {
           if (t.wrapperType !== 'track' || !t.trackId || seen.has(t.trackId)) continue
+          if (isLive(t.trackName, t.collectionName || '')) continue
+          if (isJunk(t.trackName)) continue
           seen.add(t.trackId)
           allSongs.push({
             id: String(t.trackId),
-            name: t.trackName,
+            name: cleanName(t.trackName),
             artist: t.artistName || '',
-            album: t.collectionName || '',
+            album: (t.collectionName || '').replace(/ - (Single|EP)$/i, ''),
             year: t.releaseDate ? t.releaseDate.slice(0, 4) : '',
             cover: (t.artworkUrl100 || '').replace('100x100bb', '300x300bb'),
             platform: 'apple',
@@ -32,7 +60,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } catch { continue }
     }
 
-    // Also try search by name for better coverage
     if (name) {
       for (const store of ['cn', 'tw']) {
         try {
@@ -42,12 +69,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const data: any = await r.json()
           for (const t of data.results || []) {
             if (t.wrapperType !== 'track' || !t.trackId || seen.has(t.trackId)) continue
+            if (isLive(t.trackName, t.collectionName || '')) continue
+            if (isJunk(t.trackName)) continue
             seen.add(t.trackId)
             allSongs.push({
               id: String(t.trackId),
-              name: t.trackName,
+              name: cleanName(t.trackName),
               artist: t.artistName || '',
-              album: t.collectionName || '',
+              album: (t.collectionName || '').replace(/ - (Single|EP)$/i, ''),
               year: t.releaseDate ? t.releaseDate.slice(0, 4) : '',
               cover: (t.artworkUrl100 || '').replace('100x100bb', '300x300bb'),
               platform: 'apple',
@@ -60,7 +89,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!allSongs.length) return res.json([])
 
-    // Deduplicate by normalized name
+    // Deduplicate by normalized name (simplified chinese fold)
     const deduped: any[] = []
     const seenNames = new Set<string>()
     for (const s of allSongs) {
@@ -70,7 +99,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       deduped.push(s)
     }
 
-    res.json(deduped)
+    // Take top 100 by popularity (iTunes already returns hot-first);
+    // cap at 100 so the bracket UI isn't overwhelmed and mostly hot songs stay.
+    const top = deduped.slice(0, 100)
+
+    res.json(top)
   } catch (e: any) {
     res.status(500).json({ error: e.message || 'get songs failed' })
   }
