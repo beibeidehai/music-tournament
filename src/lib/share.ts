@@ -1,6 +1,7 @@
 // Canvas export — compact bracket tree, phone-friendly, echoesvs branding
 import type { Round, Song } from '../types'
 
+const SCALE = 2 // render at 2x for sharp export
 const W = 1080
 const M = 32
 const FONT = '"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif'
@@ -120,8 +121,9 @@ export async function buildShareImage(singerName: string, rounds: Round[], champ
   const H = chartTop + chartH + footerH
 
   const cv = document.createElement('canvas')
-  cv.width = W; cv.height = H
+  cv.width = W * SCALE; cv.height = H * SCALE
   const ctx = cv.getContext('2d')!
+  ctx.scale(SCALE, SCALE)
 
   // Background
   const bgG = ctx.createLinearGradient(0, 0, 0, H)
