@@ -108,8 +108,7 @@ export default function Game() {
             }),
           }
           const rounds = buildRemainingRounds(kept, newFirstRound)
-          store.setRounds(rounds)
-          store.setStage('playing')
+          useStore.setState({ rounds, currentRound: 1, currentMatch: 0, stage: 'playing' })
           setMatchStart(Date.now())
         }}
       />
@@ -129,8 +128,7 @@ export default function Game() {
         onConfirm={(revived) => {
           const pool = [...selected, ...revived]
           const rounds = buildRemainingRounds(pool, store.rounds[0])
-          store.setRounds(rounds)
-          store.setStage('playing')
+          useStore.setState({ rounds, currentRound: 1, currentMatch: 0, stage: 'playing' })
           setMatchStart(Date.now())
         }}
       />
