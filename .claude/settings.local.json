@@ -28,7 +28,14 @@
       "Bash(git remote *)",
       "Bash(git push *)",
       "Bash(npx vercel *)",
-      "Bash(npm view *)"
+      "Bash(npm view *)",
+      "Bash(curl *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(node *)",
+      "Bash(git -C /d/wy001 add api/)",
+      "Bash(git -C /d/wy001 commit -m \"fix: use api.default for CommonJS module import\")",
+      "Bash(git -C /d/wy001 push)",
+      "Bash(git *)"
     ]
   }
 }

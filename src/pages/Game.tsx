@@ -149,11 +149,18 @@ export default function Game() {
   if (!match) return null
   const isFirstRound = store.currentRound === 0
 
-  const handleChoice = (choice: Choice) => {
+  // Record choice only, don't advance
+  const setChoice = (choice: Choice) => {
+    store.recordChoice(store.currentRound, store.currentMatch, choice, 0)
+  }
+
+  // Record with decision time and advance
+  const commitAndAdvance = (choice: Choice) => {
     const decisionMs = Date.now() - matchStart
     store.recordChoice(store.currentRound, store.currentMatch, choice, decisionMs)
 
-    if (!isFirstRound && choice !== 'both' && choice !== 'neither') {
+    // Build next round if last match of a non-first round
+    if (!isFirstRound) {
       const allDone = store.currentMatch + 1 >= round.matches.length
       if (allDone) {
         const nextRoundName = store.rounds[store.currentRound + 1]?.name
@@ -170,32 +177,32 @@ export default function Game() {
     setMatchStart(Date.now())
   }
 
+  // All rounds: click card only selects, doesn't advance
   const handleCardClick = (side: 'a' | 'b') => {
     const cur = match.choice
-    if (!isFirstRound) {
-      // Non-first round: forced single choice
-      if (cur === side) return
-      handleChoice(side)
-      return
-    }
-    // First round: toggle logic
-    if (side === 'a') {
-      if (cur === 'a') return
-      if (cur === 'neither') { handleChoice('a'); return }
-      if (cur === 'both') { handleChoice('b'); return }
-      handleChoice('a')
+    if (isFirstRound) {
+      if (side === 'a') {
+        if (cur === 'a') { setChoice(null as any); return }
+        if (!cur) { setChoice('a'); return }
+        if (cur === 'b') { setChoice('both'); return }
+        if (cur === 'both') { setChoice('b'); return }
+        if (cur === 'neither') { setChoice('a'); return }
+      } else {
+        if (cur === 'b') { setChoice(null as any); return }
+        if (!cur) { setChoice('b'); return }
+        if (cur === 'a') { setChoice('both'); return }
+        if (cur === 'both') { setChoice('a'); return }
+        if (cur === 'neither') { setChoice('b'); return }
+      }
     } else {
-      if (cur === 'b') return
-      if (cur === 'neither') { handleChoice('b'); return }
-      if (cur === 'both') { handleChoice('a'); return }
-      handleChoice('b')
+      if (cur === side) return
+      setChoice(side)
     }
   }
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8faf8' }}>
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 20px' }}>
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <button onClick={() => navigate('/')} style={{
             background: 'none', border: 'none', cursor: 'pointer',
@@ -218,7 +225,6 @@ export default function Game() {
           </div>
         ) : (
           <>
-            {/* VS cards */}
             <div style={{ display: 'flex', gap: 20, marginTop: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
               <SongCard
                 song={match.songA}
@@ -239,12 +245,11 @@ export default function Game() {
               />
             </div>
 
-            {/* Bottom actions */}
             <div style={{ marginTop: 28, textAlign: 'center' }}>
               {isFirstRound && (
                 <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
                   <button
-                    onClick={() => handleChoice('neither')}
+                    onClick={() => setChoice(match.choice === 'neither' ? null as any : 'neither')}
                     style={{
                       background: match.choice === 'neither' ? '#e74c3c' : '#fff',
                       color: match.choice === 'neither' ? '#fff' : '#666',
@@ -257,23 +262,23 @@ export default function Game() {
                     都不选
                   </button>
                   <button
-                    onClick={() => handleChoice('both')}
+                    onClick={() => setChoice(match.choice === 'both' ? null as any : 'both')}
                     style={{
                       background: match.choice === 'both' ? '#1db954' : '#fff',
-                      color: match.choice === 'both' ? '#fff' : match.choice ? '#1db954' : '#666',
+                      color: match.choice === 'both' ? '#fff' : '#666',
                       border: match.choice === 'both' ? 'none' : '1px solid #ddd',
                       padding: '10px 28px', borderRadius: 24,
                       cursor: 'pointer', fontSize: 14, fontWeight: 600,
                       transition: 'all 0.2s ease',
                     }}
                   >
-                    {match.choice === 'both' ? '已选两首' : match.choice === 'a' || match.choice === 'b' ? '加选另一首' : '两首都选'}
+                    两首都选
                   </button>
                 </div>
               )}
 
               <button
-                onClick={() => match.choice && handleChoice(match.choice)}
+                onClick={() => match.choice && commitAndAdvance(match.choice)}
                 disabled={!match.choice}
                 style={{
                   background: match.choice ? 'linear-gradient(135deg, #1db954, #169c46)' : '#e0e0e0',
@@ -287,8 +292,8 @@ export default function Game() {
                 下一组 {match.choice ? '→' : '(请选择)'}
               </button>
 
-              {!isFirstRound && !match.choice && (
-                <p style={{ color: '#aaa', fontSize: 13, marginTop: 8 }}>点击歌曲卡片选择</p>
+              {!match.choice && (
+                <p style={{ color: '#aaa', fontSize: 13, marginTop: 8 }}>点击歌曲卡片选择，再点下一组</p>
               )}
             </div>
           </>
