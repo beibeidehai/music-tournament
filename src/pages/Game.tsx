@@ -226,7 +226,7 @@ export default function Game() {
           }}>
             ← 首页
           </button>
-          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v4.0</span></span>
+          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v4.1</span></span>
         </div>
 
         <ProgressBar roundName={round.name} current={store.currentMatch} total={round.matches.length} />

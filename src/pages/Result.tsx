@@ -25,14 +25,14 @@ export default function Result() {
   const totalMs = rounds.reduce((acc, r) => acc + r.matches.reduce((a, m) => a + m.decisionMs, 0), 0)
   const totalMin = Math.round(totalMs / 60000)
 
-  const handleExport = async () => {
+  const doExport = async (vertical: boolean) => {
     setExporting(true)
     try {
       const { buildShareImage } = await import('../lib/share')
-      const blob = await buildShareImage(singer.name, rounds, champion)
-
+      const blob = await buildShareImage(singer.name, rounds, champion, { vertical })
       const link = document.createElement('a')
-      link.download = `${singer.name}-音乐淘汰赛.jpg`
+      const suffix = vertical ? '竖版' : '横版'
+      link.download = `${singer.name}-音乐淘汰赛-${suffix}.jpg`
       link.href = URL.createObjectURL(blob)
       link.click()
     } finally {
@@ -107,28 +107,44 @@ export default function Result() {
         </div>
 
         {/* Action buttons */}
-        <div style={{ textAlign: 'center', marginTop: 28, display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            style={{
-              background: exporting
-                ? 'rgba(255,255,255,0.1)'
-                : `linear-gradient(135deg, ${accent}, #169c46)`,
-              color: '#fff', border: 'none',
-              padding: '14px 48px', borderRadius: 28, fontSize: 16,
-              cursor: exporting ? 'not-allowed' : 'pointer', fontWeight: 700,
-              boxShadow: exporting ? 'none' : `0 4px 24px rgba(29,185,84,0.3)`,
-            }}
-          >
-            {exporting ? '生成中...' : '导出图片'}
-          </button>
+        <div style={{ textAlign: 'center', marginTop: 28 }}>
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
+            <button
+              onClick={() => doExport(false)}
+              disabled={exporting}
+              style={{
+                background: exporting
+                  ? 'rgba(255,255,255,0.1)'
+                  : `linear-gradient(135deg, ${accent}, #169c46)`,
+                color: '#fff', border: 'none',
+                padding: '14px 36px', borderRadius: 28, fontSize: 15,
+                cursor: exporting ? 'not-allowed' : 'pointer', fontWeight: 700,
+                boxShadow: exporting ? 'none' : `0 4px 24px rgba(29,185,84,0.3)`,
+              }}
+            >
+              {exporting ? '生成中...' : '导出横版'}
+            </button>
+            <button
+              onClick={() => doExport(true)}
+              disabled={exporting}
+              style={{
+                background: exporting
+                  ? 'rgba(255,255,255,0.06)'
+                  : 'rgba(255,255,255,0.08)',
+                color: '#fff', border: '1px solid rgba(255,255,255,0.15)',
+                padding: '14px 36px', borderRadius: 28, fontSize: 15,
+                cursor: exporting ? 'not-allowed' : 'pointer', fontWeight: 600,
+              }}
+            >
+              导出竖版
+            </button>
+          </div>
           <button
             onClick={() => navigate('/')}
             style={{
-              background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              padding: '14px 48px', borderRadius: 28, fontSize: 16,
+              background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              padding: '12px 40px', borderRadius: 24, fontSize: 14,
               cursor: 'pointer', fontWeight: 600,
             }}
           >
