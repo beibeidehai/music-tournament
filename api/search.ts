@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Parse Netease results → map by name for avatar lookup
     const neteaseByName = new Map<string, { avatar: string; songCount: number }>()
     if (neteaseR.status === 'fulfilled') {
-      const artists = neteaseR.value?.body?.result?.artists || []
+      const artists = (neteaseR.value as any)?.body?.result?.artists || []
       for (const a of artists) {
         const key = a.name.toLowerCase().trim()
         if (!neteaseByName.has(key)) {
