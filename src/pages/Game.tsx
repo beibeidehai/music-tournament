@@ -30,6 +30,7 @@ export default function Game() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const singerId = searchParams.get('singer') || ''
+  const singerName = searchParams.get('name') || ''
   const store = useStore()
   const [loading, setLoading] = useState(true)
   const [matchStart, setMatchStart] = useState(0)
@@ -38,7 +39,7 @@ export default function Game() {
   useEffect(() => {
     if (store.rounds.length > 0) { setLoading(false); setMatchStart(Date.now()); return }
     if (!singerId) { navigate('/'); return }
-    getSongs(singerId)
+    getSongs(singerId, singerName)
       .then((songs) => {
         if (!getTournamentConfig(songs.length)) {
           setError('该歌手歌曲太少（不足8首），请换一个歌手')

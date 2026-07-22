@@ -40,7 +40,8 @@
       "Bash(npx tsx -e ' *)",
       "Bash(npx tsx *)",
       "Bash(git reset *)",
-      "Bash(rm -f test_bracket2.ts)"
+      "Bash(rm -f test_bracket2.ts)",
+      "WebFetch(domain:musiccup.app)"
     ]
   }
 }

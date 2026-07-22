@@ -5,19 +5,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!q) return res.status(400).json({ error: 'missing q' })
 
   try {
-    const mod = await import('@neteasecloudmusicapienhanced/api')
-    const api = mod.default || mod
-    if (typeof api.search !== 'function') {
-      return res.status(500).json({ error: 'search not a function', keys: Object.keys(api).slice(0, 5) })
+    const stores = ['cn', 'tw']
+    const results = await Promise.allSettled(stores.map(st =>
+      fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=musicArtist&limit=6&country=${st}`)
+    ))
+
+    const artists: any[] = []
+    const seen = new Set<number>()
+    for (const r of results) {
+      if (r.status !== 'fulfilled' || !r.value.ok) continue
+      const data: any = await r.value.json()
+      for (const a of data.results || []) {
+        if (a.wrapperType !== 'artist' || seen.has(a.artistId)) continue
+        seen.add(a.artistId)
+        artists.push({
+          id: String(a.artistId),
+          name: a.artistName,
+          avatar: '',
+          songCount: 0,
+          platform: 'apple',
+        })
+      }
     }
-    const result: any = await api.search({ keywords: q, type: 100, limit: 8 })
-    const artists = (result.body?.result?.artists || []).map((a: any) => ({
-      id: String(a.id),
-      name: a.name,
-      avatar: a.picUrl || a.img1v1Url || '',
-      songCount: a.albumSize || 0,
-      platform: 'netease',
-    }))
+
     res.json(artists)
   } catch (e: any) {
     res.status(500).json({ error: e.message || 'search failed' })

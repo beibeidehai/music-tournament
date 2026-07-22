@@ -21,8 +21,9 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation()
+    if (!song.playUrl) return
     if (playing) { stop(); return }
-    play(song.id)
+    play(song.playUrl, song.id)
   }
 
   const borderColor = selected ? '#1db954' : '#e8e8e8'
@@ -75,17 +76,19 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
 
         <button
           onClick={handlePlay}
+          disabled={!song.playUrl}
           style={{
             marginTop: 12, border: 'none',
             background: playing ? '#e74c3c' : '#1db954',
             color: '#fff', borderRadius: 24,
-            padding: '8px 28px', cursor: 'pointer',
+            padding: '8px 28px', cursor: song.playUrl ? 'pointer' : 'default',
             fontSize: 13, fontWeight: 600,
+            opacity: song.playUrl ? 1 : 0.4,
             transition: 'all 0.2s ease',
             width: '100%',
           }}
         >
-          {playing ? '⏸ 停止' : '▶ 试听 30s'}
+          {!song.playUrl ? '无试听' : playing ? '⏸ 停止' : '▶ 试听 30s'}
         </button>
       </div>
     </div>
