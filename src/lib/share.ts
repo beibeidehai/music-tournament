@@ -1,5 +1,6 @@
 // Canvas export — converging bracket: left/right halves → center champion
 import type { Round, Song } from '../types'
+import QRCode from 'qrcode'
 
 const SCALE = 2
 const FONT = '"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif'
@@ -10,7 +11,8 @@ const DARK = '#0b0b13'
 const M = 36
 const CARD_W = 136; const CARD_H = 44
 const COL_GAP = 20; const V_GAP = 6
-const CHAMP_W = 130
+const CHAMP_W = 170
+const CHAMP_SIZE = 130
 
 function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   r = Math.min(r, w / 2, h / 2)
@@ -54,6 +56,11 @@ export async function buildShareImage(singerName: string, rounds: Round[], champ
   const covers = new Map<string, HTMLImageElement | null>()
   await Promise.all(allCovers.slice(0, 60).map(async u => { covers.set(u, await loadImg(u)) }))
 
+  // QR code
+  let qrDataUrl = ''
+  try { qrDataUrl = await QRCode.toDataURL('https://echoesvs.site', { width: 200, margin: 1, color: { dark: '#ffffffcc', light: '#00000000' } }) }
+  catch { /* skip qr */ }
+
   // --- layout ---
   const bracketRounds = visible.slice(0, -1)  // rounds split into L/R halves
   const finalRound = visible[nRounds - 1]
@@ -63,7 +70,7 @@ export async function buildShareImage(singerName: string, rounds: Round[], champ
   const maxHalf = Math.max(...bracketRounds.map(r => Math.ceil(r.matches.length / 2)), 1)
   const chartH = maxHalf * (CARD_H + V_GAP) + 8
   // Reserve space below bracket for champion card
-  const champSectionH = 210
+  const champSectionH = 280
 
   // Total width: left columns + center gap + champion + center gap + right columns
   const totalW = 2 * nBracket * (CARD_W + COL_GAP) + CHAMP_W + COL_GAP * 2
@@ -176,53 +183,69 @@ export async function buildShareImage(singerName: string, rounds: Round[], champ
   if (finalRound.matches[0]) {
     const finalMatch = finalRound.matches[0]
     const bannerTop = headerH + chartH + 8
-    const cSize = 100
-    const cX = centerX + (CHAMP_W - cSize) / 2
+    const cX = centerX + (CHAMP_W - CHAMP_SIZE) / 2
     const cY = bannerTop + 20
 
     ctx.save()
-    ctx.shadowColor = 'rgba(29,185,84,0.25)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 10
-    rr(ctx, cX, cY, cSize, cSize, 18)
+    ctx.shadowColor = 'rgba(29,185,84,0.3)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 12
+    rr(ctx, cX, cY, CHAMP_SIZE, CHAMP_SIZE, 20)
     ctx.fillStyle = '#111119'; ctx.fill()
     ctx.restore()
 
     const champSong = finalMatch.choice === 'a' ? finalMatch.songA : finalMatch.songB
     const champImg = covers.get(champSong.cover)
-    if (champImg) { ctx.save(); rr(ctx, cX, cY, cSize, cSize, 18); ctx.clip(); ctx.drawImage(champImg, cX, cY, cSize, cSize); ctx.restore() }
+    if (champImg) { ctx.save(); rr(ctx, cX, cY, CHAMP_SIZE, CHAMP_SIZE, 20); ctx.clip(); ctx.drawImage(champImg, cX, cY, CHAMP_SIZE, CHAMP_SIZE); ctx.restore() }
 
-    rr(ctx, cX, cY, cSize, cSize, 18)
-    ctx.strokeStyle = GREEN; ctx.lineWidth = 3; ctx.stroke()
+    rr(ctx, cX, cY, CHAMP_SIZE, CHAMP_SIZE, 20)
+    ctx.strokeStyle = GREEN; ctx.lineWidth = 4; ctx.stroke()
 
+    // Crown
     ctx.save()
-    ctx.translate(cX + cSize, cY)
+    ctx.translate(cX + CHAMP_SIZE, cY - 4)
     ctx.rotate(0.3)
-    ctx.font = '48px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.font = '56px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
     ctx.fillStyle = '#fff'
     ctx.fillText('👑', 0, 0)
     ctx.restore()
 
-    let ly = cY + cSize + 14
+    let ly = cY + CHAMP_SIZE + 16
     ctx.textAlign = 'center'
-    ctx.font = `700 15px ${FONT}`
+    ctx.font = `700 16px ${FONT}`
     const lbl = '🏆 冠军'
-    const lw = ctx.measureText(lbl).width + 36
-    rr(ctx, centerX + (CHAMP_W - lw) / 2, ly, lw, 32, 16)
+    const lw = ctx.measureText(lbl).width + 40
+    rr(ctx, centerX + (CHAMP_W - lw) / 2, ly, lw, 36, 18)
     ctx.fillStyle = grd(ctx, centerX + (CHAMP_W - lw) / 2, ly, centerX + (CHAMP_W + lw) / 2, ly)
     ctx.fill()
     ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'
-    ctx.fillText(lbl, centerX + CHAMP_W / 2, ly + 16)
-    ly += 32 + 6
-    ctx.font = `900 22px ${FONT}`; ctx.fillStyle = '#fff'
-    ctx.fillText(champion, centerX + CHAMP_W / 2, ly + 14)
+    ctx.fillText(lbl, centerX + CHAMP_W / 2, ly + 18)
+    ly += 36 + 8
+    ctx.font = `900 26px ${FONT}`; ctx.fillStyle = '#fff'
+    ctx.fillText(champion, centerX + CHAMP_W / 2, ly + 16)
   }
 
   // Footer
   const fy = headerH + bodyH + 1
   ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1
   ctx.beginPath(); ctx.moveTo(M, fy); ctx.lineTo(W - M, fy); ctx.stroke()
-  ctx.textAlign = 'center'
+  ctx.textAlign = 'left'
   ctx.font = `400 15px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.25)'
-  ctx.fillText('决战歌曲之巅 · echoesvs.site', W / 2, fy + 34)
+  ctx.fillText('决战歌曲之巅 · echoesvs.site', M, fy + 34)
+
+  // QR code
+  if (qrDataUrl) {
+    const qrSize = 64
+    const qrX = W - M - qrSize
+    const qrY = fy + 4
+    // White bg for QR
+    rr(ctx, qrX - 4, qrY - 4, qrSize + 8, qrSize + 8, 8)
+    ctx.fillStyle = '#fff'; ctx.fill()
+    const qrImg = await loadImg(qrDataUrl)
+    if (qrImg) ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize)
+    // Caption
+    ctx.textAlign = 'right'
+    ctx.font = `400 9px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.18)'
+    ctx.fillText('扫码访问', W - M, qrY + qrSize + 14)
+  }
 
   // Grain
   ctx.globalAlpha = 0.03
