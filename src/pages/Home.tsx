@@ -65,7 +65,7 @@ export default function Home() {
               </div>
 
               <button
-                onClick={() => navigate(`/game?singer=${encodeURIComponent(singer.id)}&platform=${encodeURIComponent(singer.platform)}`)}
+                onClick={() => navigate(`/game?singer=${encodeURIComponent(singer.id)}`)}
                 style={{
                   background: `linear-gradient(135deg, ${accent}, #169c46)`,
                   color: '#fff', border: 'none',

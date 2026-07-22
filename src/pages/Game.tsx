@@ -29,7 +29,6 @@ export default function Game() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const singerId = searchParams.get('singer') || ''
-  const platform = searchParams.get('platform') || ''
   const store = useStore()
   const [loading, setLoading] = useState(true)
   const [matchStart, setMatchStart] = useState(0)
@@ -38,7 +37,7 @@ export default function Game() {
   useEffect(() => {
     if (store.rounds.length > 0) { setLoading(false); setMatchStart(Date.now()); return }
     if (!singerId) { navigate('/'); return }
-    getSongs(singerId, platform)
+    getSongs(singerId)
       .then((songs) => {
         if (!getTournamentConfig(songs.length)) {
           setError('该歌手歌曲太少（不足8首），请换一个歌手')
@@ -64,7 +63,7 @@ export default function Game() {
       const { getPlayUrl } = await import('../lib/api')
       for (const song of [match.songA, match.songB]) {
         if (!song.playUrl) {
-          try { song.playUrl = await getPlayUrl(song.id, song.platform) }
+          try { song.playUrl = await getPlayUrl(song.id) }
           catch { song.playUrl = '' }
         }
       }
@@ -140,7 +139,7 @@ export default function Game() {
 
   // Finished all rounds
   if (store.currentRound >= store.rounds.length) {
-    navigate(`/result?singer=${encodeURIComponent(singerId)}&platform=${encodeURIComponent(platform)}`)
+    navigate(`/result?singer=${encodeURIComponent(singerId)}`)
     return null
   }
 

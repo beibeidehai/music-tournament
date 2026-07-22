@@ -5,20 +5,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!q) return res.status(400).json({ error: 'missing q' })
 
   try {
-    // 动态导入 listen1-api（部署时 Vercel 会安装此依赖）
-    const listen1 = await import('listen1-api')
-    const results = await listen1.search(q, ['netease', 'qq', 'kugou', 'kuwo', 'bilibili'])
-    const singers = results
-      .filter((r: any) => r.type === 'artist')
-      .map((r: any) => ({
-        id: r.id,
-        name: r.name,
-        avatar: r.avatar || '',
-        songCount: r.song_count || 0,
-        platform: r.platform,
-      }))
-    res.json(singers)
-  } catch (e) {
-    res.status(500).json({ error: 'search failed' })
+    const { search } = await import('@neteasecloudmusicapienhanced/api')
+    const result = await search({ keywords: q, type: 100, limit: 8 })
+    const artists = (result.body?.result?.artists || []).map((a: any) => ({
+      id: String(a.id),
+      name: a.name,
+      avatar: a.picUrl || a.img1v1Url || '',
+      songCount: a.albumSize || 0,
+      platform: 'netease',
+    }))
+    res.json(artists)
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || 'search failed' })
   }
 }
