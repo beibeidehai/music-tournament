@@ -48,8 +48,9 @@ export const useStore = create<Store>()(
               if (m.choice === 'a' || m.choice === 'b') return acc + 1
               return acc
             }, 0)
-            if (selected > 32) return { stage: 'trimming' as GameStage }
-            if (selected < 32) return { stage: 'reviving' as GameStage }
+            const target = round.matches.length
+            if (selected > target) return { stage: 'trimming' as GameStage }
+            if (selected < target) return { stage: 'reviving' as GameStage }
             return { currentRound: s.currentRound + 1, currentMatch: 0 }
           }
           return { currentRound: s.currentRound + 1, currentMatch: 0 }
@@ -67,6 +68,6 @@ export const useStore = create<Store>()(
 
       reset: () => set({ ...initialState }),
     }),
-    { name: 'music-tournament' }
+    { name: 'music-tournament', version: 2 }
   )
 )

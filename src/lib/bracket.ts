@@ -54,7 +54,7 @@ export function buildNextRound(prevRound: Round, roundName: string): Round {
   for (let i = 0; i < shuffled.length; i += 2) {
     matches.push({
       songA: shuffled[i],
-      songB: shuffled[i + 1],
+      songB: shuffled[i + 1] || shuffled[i],
       choice: null,
       decisionMs: 0,
     })

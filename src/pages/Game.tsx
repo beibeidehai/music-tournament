@@ -164,10 +164,12 @@ export default function Game() {
       if (allDone) {
         const nextRoundName = store.rounds[store.currentRound + 1]?.name
         if (nextRoundName) {
-          const nextRound = buildNextRound(round, nextRoundName)
-          const rounds = [...store.rounds]
+          // Read fresh round from store — the render-closure `round` is stale after recordChoice
+          const freshRound = useStore.getState().rounds[store.currentRound]
+          const nextRound = buildNextRound(freshRound, nextRoundName)
+          const rounds = [...useStore.getState().rounds]
           rounds[store.currentRound + 1] = nextRound
-          store.setRoundsAndSkip(rounds, store.currentRound)
+          useStore.getState().setRoundsAndSkip(rounds, store.currentRound)
         }
       }
     }

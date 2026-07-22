@@ -1,6 +1,9 @@
 let currentAudio: HTMLAudioElement | null = null
 let currentSongId: string | null = null
 let timeoutId: ReturnType<typeof setTimeout> | null = null
+let onError: ((songId: string) => void) | null = null
+
+export function setOnError(fn: (songId: string) => void) { onError = fn }
 
 export function play(url: string, songId: string): HTMLAudioElement {
   if (currentAudio) {
@@ -10,7 +13,12 @@ export function play(url: string, songId: string): HTMLAudioElement {
   }
 
   const audio = new Audio(url)
-  audio.play().catch(() => {})
+  const promise = audio.play()
+  if (promise) {
+    promise.catch(() => {
+      if (onError) onError(songId)
+    })
+  }
   currentAudio = audio
   currentSongId = songId
 

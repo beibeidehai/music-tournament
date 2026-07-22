@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { play, stop, getCurrentSongId } from '../lib/audio'
+import { play, stop, getCurrentSongId, setOnError } from '../lib/audio'
 import type { Song } from '../types'
 
 interface Props {
@@ -11,11 +11,13 @@ interface Props {
 
 export default function SongCard({ song, selected, onClick, canBoth }: Props) {
   const [playing, setPlaying] = useState(false)
+  const [playError, setPlayError] = useState(false)
 
   useEffect(() => {
     const check = setInterval(() => {
       setPlaying(getCurrentSongId() === song.id)
     }, 200)
+    setOnError((id) => { if (id === song.id) setPlayError(true) })
     return () => clearInterval(check)
   }, [song.id])
 
@@ -23,6 +25,7 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
     e.stopPropagation()
     if (!song.playUrl) return
     if (playing) { stop(); return }
+    setPlayError(false)
     play(song.playUrl, song.id)
   }
 
@@ -81,7 +84,7 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
           disabled={!song.playUrl}
           style={{
             marginTop: 12, border: 'none',
-            background: playing ? '#e74c3c' : '#1db954',
+            background: playError ? '#e74c3c' : playing ? '#e74c3c' : '#1db954',
             color: '#fff', borderRadius: 24,
             padding: '8px 28px', cursor: song.playUrl ? 'pointer' : 'not-allowed',
             fontSize: 13, fontWeight: 600,
@@ -90,7 +93,7 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
             width: '100%',
           }}
         >
-          {playing ? '⏸ 停止' : '▶ 试听 30s'}
+          {playError ? '⚠ 无法播放' : playing ? '⏸ 停止' : '▶ 试听 30s'}
         </button>
       </div>
     </div>
