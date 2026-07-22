@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 // Patterns from musiccup.app — filter live versions, instrumentals, junk
 const LIVE = [
-  /[(\[（【][^)\]）】]*(live|unplugged)[^)\]）】]*[)\]）】]/i,
+  /\(.*(live|Live|LIVE|unplugged|Unplugged).*\)/,
   /\blive\s+(at|from|in|on|@)\b/i,
   /[-–—~]\s*live\b/i,
   /\blive\s*(version|ver\.?|session|edit|recording|album)\b/i,
@@ -10,8 +10,7 @@ const LIVE = [
   /(现场|現場|演唱会|演唱會|音乐会|音樂會|音乐节|音樂節|live版|巡回|巡迴|巡演|不插电|不插電|演奏会|演奏會)/i,
 ]
 const JUNK = [
-  /(\binstrumental\b|伴奏|卡拉OK|karaoke|off\s?vocal|纯音乐|純音樂|\bcommentary\b|\bvoice memo\b)/i,
-  /([(\[（【][^)\]）】]*remix[^)\]）】]*[)\]）】)/i,
+  /(\binstrumental\b|伴奏|卡拉OK|karaoke|off\s*vocal|纯音乐|純音樂|\bcommentary\b|\bvoice memo\b|Remix)/i,
 ]
 
 function isLive(name: string, album: string): boolean {
