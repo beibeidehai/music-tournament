@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useStore } from '../store'
 import { getSongs } from '../lib/api'
@@ -54,23 +54,21 @@ export default function Game() {
       .catch(() => { setError('加载歌曲失败，请重试'); setLoading(false) })
   }, [])
 
+  // Round transition toast
+  const [toast, setToast] = useState('')
+  const prevRoundRef = useRef(store.currentRound)
   useEffect(() => {
-    if (store.stage !== 'playing' || loading) return
-    const round = store.rounds[store.currentRound]
-    if (!round) return
-    const match = round.matches[store.currentMatch]
-    if (!match) return
-    const loadUrls = async () => {
-      const { getPlayUrl } = await import('../lib/api')
-      for (const song of [match.songA, match.songB]) {
-        if (!song.playUrl) {
-          try { song.playUrl = await getPlayUrl(song.id) }
-          catch { song.playUrl = '' }
-        }
+    if (store.currentRound !== prevRoundRef.current && store.stage === 'playing') {
+      const name = store.rounds[store.currentRound]?.name
+      if (name) {
+        setToast(name)
+        const t = setTimeout(() => setToast(''), 2000)
+        prevRoundRef.current = store.currentRound
+        return () => clearTimeout(t)
       }
     }
-    loadUrls()
-  }, [store.currentRound, store.currentMatch, store.stage, loading])
+    prevRoundRef.current = store.currentRound
+  }, [store.currentRound, store.stage])
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#999', fontSize: 16 }}>
@@ -204,6 +202,20 @@ export default function Game() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8faf8' }}>
+      {/* Round transition toast */}
+      {toast && (
+        <div style={{
+          position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 1000,
+          background: 'linear-gradient(135deg, #1db954, #169c46)',
+          color: '#fff', padding: '12px 32px', borderRadius: 28,
+          fontSize: 16, fontWeight: 700,
+          boxShadow: '0 4px 24px rgba(29,185,84,0.35)',
+          animation: 'toastIn 0.3s ease',
+        }}>
+          {toast}
+        </div>
+      )}
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <button onClick={() => navigate('/')} style={{

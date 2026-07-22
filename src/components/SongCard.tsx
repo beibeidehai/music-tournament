@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { play, stop, getCurrentSongId, setOnError } from '../lib/audio'
-import { getPlayUrl } from '../lib/api'
+import { play, stop, getCurrentSongId } from '../lib/audio'
 import type { Song } from '../types'
 
 interface Props {
@@ -12,32 +11,18 @@ interface Props {
 
 export default function SongCard({ song, selected, onClick, canBoth }: Props) {
   const [playing, setPlaying] = useState(false)
-  const [playError, setPlayError] = useState(false)
-  const [loadingUrl, setLoadingUrl] = useState(false)
 
   useEffect(() => {
     const check = setInterval(() => {
       setPlaying(getCurrentSongId() === song.id)
     }, 200)
-    setOnError((id) => { if (id === song.id) setPlayError(true) })
     return () => clearInterval(check)
   }, [song.id])
 
-  const handlePlay = async (e: React.MouseEvent) => {
+  const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (playing) { stop(); return }
-    setPlayError(false)
-
-    // Lazy-load play URL on first click
-    if (!song.playUrl) {
-      setLoadingUrl(true)
-      try { song.playUrl = await getPlayUrl(song.id) }
-      catch { song.playUrl = '' }
-      setLoadingUrl(false)
-      if (!song.playUrl) { setPlayError(true); return }
-    }
-
-    play(song.playUrl, song.id)
+    play(song.id)
   }
 
   const borderColor = selected ? '#1db954' : '#e8e8e8'
@@ -59,7 +44,6 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
         maxWidth: 320,
       }}
     >
-      {/* Album cover */}
       <div style={{
         width: '100%', aspectRatio: '1',
         background: song.cover ? `url(${song.cover}) center/cover` : 'linear-gradient(135deg, #e0e0e0, #ccc)',
@@ -73,11 +57,10 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16, fontWeight: 700,
             boxShadow: '0 2px 8px rgba(29,185,84,0.4)',
-          }}>{canBoth ? '✓' : '✓'}</div>
+          }}>✓</div>
         )}
       </div>
 
-      {/* Song info */}
       <div style={{ padding: '16px 14px 14px' }}>
         <p style={{
           fontWeight: 700, margin: 0, fontSize: 15,
@@ -94,7 +77,7 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
           onClick={handlePlay}
           style={{
             marginTop: 12, border: 'none',
-            background: playError ? '#e74c3c' : playing ? '#e74c3c' : '#1db954',
+            background: playing ? '#e74c3c' : '#1db954',
             color: '#fff', borderRadius: 24,
             padding: '8px 28px', cursor: 'pointer',
             fontSize: 13, fontWeight: 600,
@@ -102,7 +85,7 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
             width: '100%',
           }}
         >
-          {loadingUrl ? '加载中...' : playError ? '⚠ 无法播放' : playing ? '⏸ 停止' : '▶ 试听 30s'}
+          {playing ? '⏸ 停止' : '▶ 试听 30s'}
         </button>
       </div>
     </div>

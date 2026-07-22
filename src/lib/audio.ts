@@ -1,24 +1,16 @@
 let currentAudio: HTMLAudioElement | null = null
 let currentSongId: string | null = null
 let timeoutId: ReturnType<typeof setTimeout> | null = null
-let onError: ((songId: string) => void) | null = null
 
-export function setOnError(fn: (songId: string) => void) { onError = fn }
-
-export function play(url: string, songId: string): HTMLAudioElement {
+export function play(songId: string): HTMLAudioElement {
   if (currentAudio) {
     currentAudio.pause()
     currentAudio.currentTime = 0
     if (timeoutId) clearTimeout(timeoutId)
   }
 
-  const audio = new Audio(url)
-  const promise = audio.play()
-  if (promise) {
-    promise.catch(() => {
-      if (onError) onError(songId)
-    })
-  }
+  const audio = new Audio(`/api/play?id=${encodeURIComponent(songId)}`)
+  audio.play().catch(() => {})
   currentAudio = audio
   currentSongId = songId
 
