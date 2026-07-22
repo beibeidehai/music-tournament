@@ -46,12 +46,16 @@ export default function Home() {
             }}>
               <div style={{
                 width: 100, height: 100, borderRadius: '50%',
-                background: singer.avatar ? `url(${singer.avatar}) center/cover` : '#eee',
+                background: singer.avatar
+                  ? `url(${singer.avatar}) center/cover`
+                  : `linear-gradient(135deg, ${accent}, #169c46)`,
                 margin: '0 auto 16px',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-              }} />
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontSize: 36, fontWeight: 700,
+              }}>{!singer.avatar && singer.name[0]}</div>
               <h2 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 700 }}>{singer.name}</h2>
-              <p style={{ color: '#999', fontSize: 14, margin: '0 0 24px' }}>已收录 {singer.songCount} 首歌</p>
+              <p style={{ color: '#999', fontSize: 14, margin: '0 0 24px' }}>Apple Music</p>
 
               <div style={{
                 background: cardBg, borderRadius: 14, padding: 20,

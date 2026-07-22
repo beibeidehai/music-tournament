@@ -94,12 +94,15 @@ export default function SearchBox({ onSelect }: Props) {
             >
               <div style={{
                 width: 48, height: 48, borderRadius: '50%',
-                background: s.avatar ? `url(${s.avatar}) center/cover` : '#eee',
-                flexShrink: 0,
-              }} />
+                background: s.avatar
+                  ? `url(${s.avatar}) center/cover`
+                  : `linear-gradient(135deg, ${accent}, #169c46)`,
+                flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontSize: 18, fontWeight: 700,
+              }}>{!s.avatar && s.name[0]}</div>
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontWeight: 600, fontSize: 15, color: '#222' }}>{s.name}</div>
-                <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>歌手 · {s.songCount} 首歌</div>
+                <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>Apple Music</div>
               </div>
             </li>
           ))}
