@@ -109,7 +109,7 @@ export default function Game() {
             }),
           }
           const rounds = buildRemainingRounds(kept, newFirstRound)
-          useStore.setState({ rounds, currentRound: 1, currentMatch: 0, stage: 'playing' })
+          store.setRoundsAndSkip(rounds, 1)
           setMatchStart(Date.now())
         }}
       />
@@ -129,7 +129,7 @@ export default function Game() {
         onConfirm={(revived) => {
           const pool = [...selected, ...revived]
           const rounds = buildRemainingRounds(pool, store.rounds[0])
-          useStore.setState({ rounds, currentRound: 1, currentMatch: 0, stage: 'playing' })
+          store.setRoundsAndSkip(rounds, 1)
           setMatchStart(Date.now())
         }}
       />
@@ -167,7 +167,7 @@ export default function Game() {
           const nextRound = buildNextRound(round, nextRoundName)
           const rounds = [...store.rounds]
           rounds[store.currentRound + 1] = nextRound
-          useStore.setState({ rounds })
+          store.setRoundsAndSkip(rounds, store.currentRound)
         }
       }
     }

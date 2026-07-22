@@ -6,6 +6,7 @@ interface Store extends GameState {
   setSinger: (singer: Singer) => void
   setSongs: (songs: Song[]) => void
   setRounds: (rounds: Round[]) => void
+  setRoundsAndSkip: (rounds: Round[], skipToRound: number) => void
   nextMatch: () => void
   setStage: (stage: GameStage) => void
   recordChoice: (roundIdx: number, matchIdx: number, choice: GameState['rounds'][0]['matches'][0]['choice'], decisionMs: number) => void
@@ -32,6 +33,7 @@ export const useStore = create<Store>()(
       setSongs: (songs) => set({ allSongs: songs }),
 
       setRounds: (rounds) => set({ rounds, currentRound: 0, currentMatch: 0, stage: 'playing' }),
+      setRoundsAndSkip: (rounds, skipToRound) => set({ rounds, currentRound: skipToRound, currentMatch: 0, stage: 'playing' }),
 
       nextMatch: () =>
         set((s) => {
