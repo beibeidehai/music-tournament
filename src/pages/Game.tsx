@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useStore } from '../store'
 import { getSongs } from '../lib/api'
 import { generateRounds, buildNextRound, getSelectedSongs, getEliminatedSongs, getTournamentConfig } from '../lib/bracket'
+import { stop as stopAudio } from '../lib/audio'
 import ProgressBar from '../components/ProgressBar'
 import SongCard from '../components/SongCard'
 import TrimRevive from '../components/TrimRevive'
@@ -155,6 +156,7 @@ export default function Game() {
   // Record with decision time and advance
   const commitAndAdvance = (choice: Choice) => {
     const decisionMs = Date.now() - matchStart
+    stopAudio()
     store.recordChoice(store.currentRound, store.currentMatch, choice, decisionMs)
 
     // Build next round if last match, without resetting position
