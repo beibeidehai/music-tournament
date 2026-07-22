@@ -12,7 +12,7 @@ function buildRemainingRounds(pool: Song[], firstRound: Round): Round[] {
   const config = getTournamentConfig(pool.length * 2)
   if (!config) return [firstRound]
   const rounds: Round[] = [firstRound]
-  let cur = pool
+  let cur = [...pool]
   for (const name of config.rounds.slice(1)) {
     const shuffled = [...cur].sort(() => Math.random() - 0.5)
     const matches: Round['matches'] = []
@@ -20,6 +20,7 @@ function buildRemainingRounds(pool: Song[], firstRound: Round): Round[] {
       matches.push({ songA: shuffled[i], songB: shuffled[i + 1] || shuffled[i], choice: null, decisionMs: 0 })
     }
     rounds.push({ name, matches })
+    // 预留空槽给下一轮（在 buildNextRound 中动态填充）
     cur = []
   }
   return rounds
@@ -166,7 +167,7 @@ export default function Game() {
           const nextRound = buildNextRound(round, nextRoundName)
           const rounds = [...store.rounds]
           rounds[store.currentRound + 1] = nextRound
-          store.setRounds(rounds)
+          useStore.setState({ rounds })
         }
       }
     }
