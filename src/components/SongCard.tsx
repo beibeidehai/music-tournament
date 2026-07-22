@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { play, stop, getCurrentSongId, setOnError } from '../lib/audio'
+import { getPlayUrl } from '../lib/api'
 import type { Song } from '../types'
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 export default function SongCard({ song, selected, onClick, canBoth }: Props) {
   const [playing, setPlaying] = useState(false)
   const [playError, setPlayError] = useState(false)
+  const [loadingUrl, setLoadingUrl] = useState(false)
 
   useEffect(() => {
     const check = setInterval(() => {
@@ -21,11 +23,20 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
     return () => clearInterval(check)
   }, [song.id])
 
-  const handlePlay = (e: React.MouseEvent) => {
+  const handlePlay = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!song.playUrl) return
     if (playing) { stop(); return }
     setPlayError(false)
+
+    // Lazy-load play URL on first click
+    if (!song.playUrl) {
+      setLoadingUrl(true)
+      try { song.playUrl = await getPlayUrl(song.id) }
+      catch { song.playUrl = '' }
+      setLoadingUrl(false)
+      if (!song.playUrl) { setPlayError(true); return }
+    }
+
     play(song.playUrl, song.id)
   }
 
@@ -81,19 +92,17 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
 
         <button
           onClick={handlePlay}
-          disabled={!song.playUrl}
           style={{
             marginTop: 12, border: 'none',
             background: playError ? '#e74c3c' : playing ? '#e74c3c' : '#1db954',
             color: '#fff', borderRadius: 24,
-            padding: '8px 28px', cursor: song.playUrl ? 'pointer' : 'not-allowed',
+            padding: '8px 28px', cursor: 'pointer',
             fontSize: 13, fontWeight: 600,
-            opacity: song.playUrl ? 1 : 0.4,
             transition: 'all 0.2s ease',
             width: '100%',
           }}
         >
-          {playError ? '⚠ 无法播放' : playing ? '⏸ 停止' : '▶ 试听 30s'}
+          {loadingUrl ? '加载中...' : playError ? '⚠ 无法播放' : playing ? '⏸ 停止' : '▶ 试听 30s'}
         </button>
       </div>
     </div>

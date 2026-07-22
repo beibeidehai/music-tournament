@@ -158,16 +158,20 @@ export default function Game() {
     const decisionMs = Date.now() - matchStart
     store.recordChoice(store.currentRound, store.currentMatch, choice, decisionMs)
 
-    // Build next round if last match (all rounds, including first)
+    // Build next round if last match, without resetting position
     const allDone = store.currentMatch + 1 >= round.matches.length
     if (allDone) {
-      const nextRoundName = store.rounds[store.currentRound + 1]?.name
+      const nextIdx = store.currentRound + 1
+      const nextRoundName = store.rounds[nextIdx]?.name
       if (nextRoundName) {
         const freshRound = useStore.getState().rounds[store.currentRound]
         const nextRound = buildNextRound(freshRound, nextRoundName)
-        const rounds = [...useStore.getState().rounds]
-        rounds[store.currentRound + 1] = nextRound
-        useStore.getState().setRoundsAndSkip(rounds, store.currentRound)
+        // Only update rounds — let nextMatch handle position advance
+        useStore.setState((s: any) => {
+          const rounds = [...s.rounds]
+          rounds[nextIdx] = nextRound
+          return { rounds }
+        })
       }
     }
 
