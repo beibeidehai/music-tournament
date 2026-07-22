@@ -102,7 +102,7 @@ export default function SearchBox({ onSelect }: Props) {
               }}>{!s.avatar && s.name[0]}</div>
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontWeight: 600, fontSize: 15, color: '#222' }}>{s.name}</div>
-                <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>{s.songCount} 首歌</div>
+                <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>Apple Music</div>
               </div>
             </li>
           ))}

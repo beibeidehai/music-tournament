@@ -55,7 +55,7 @@ export default function Home() {
                 color: '#fff', fontSize: 36, fontWeight: 700,
               }}>{!singer.avatar && singer.name[0]}</div>
               <h2 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 700 }}>{singer.name}</h2>
-              <p style={{ color: '#999', fontSize: 14, margin: '0 0 24px' }}>{singer.songCount > 0 ? `${singer.songCount} 首歌` : ''}</p>
+              <p style={{ color: '#999', fontSize: 14, margin: '0 0 24px' }}>Apple Music</p>
 
               <div style={{
                 background: cardBg, borderRadius: 14, padding: 20,
