@@ -9,8 +9,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const api = mod.default || mod
     const allSongs: any[] = []
     for (let offset = 0; offset < 200; offset += 100) {
-      const result = await api.artist_songs({ id, limit: 100, offset, order: 'hot' })
-      const songs = result.body?.songs || []
+      const result: any = await api.artist_songs({ id, limit: 100, offset, order: 'hot' as any })
+      const songs: any[] = result.body?.songs || []
       if (songs.length === 0) break
       allSongs.push(...songs)
     }

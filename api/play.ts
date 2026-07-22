@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const mod = await import('@neteasecloudmusicapienhanced/api')
     const api = mod.default || mod
-    const result = await api.song_url({ id, br: 128000 })
+    const result: any = await api.song_url({ id, br: 128000 })
     const url = result.body?.data?.[0]?.url || ''
     res.json({ playUrl: url })
   } catch (e: any) {

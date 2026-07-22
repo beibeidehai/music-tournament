@@ -10,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (typeof api.search !== 'function') {
       return res.status(500).json({ error: 'search not a function', keys: Object.keys(api).slice(0, 5) })
     }
-    const result = await api.search({ keywords: q, type: 100, limit: 8 })
+    const result: any = await api.search({ keywords: q, type: 100, limit: 8 })
     const artists = (result.body?.result?.artists || []).map((a: any) => ({
       id: String(a.id),
       name: a.name,
