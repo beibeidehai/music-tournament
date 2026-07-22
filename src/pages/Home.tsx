@@ -29,7 +29,7 @@ export default function Home() {
         </div>
 
         <h1 style={{ fontSize: 36, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.5px', color: '#111' }}>
-          音乐淘汰赛
+          音乐淘汰赛 <span style={{ background: '#ff6b35', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, verticalAlign: 'middle', fontWeight: 700 }}>v3 — 点击选歌·按钮推进</span>
         </h1>
         <p style={{ color: '#777', fontSize: 16, marginBottom: 40, lineHeight: 1.6 }}>
           搜索一位歌手，两两对决，选出你心中的最佳曲目
