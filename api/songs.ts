@@ -36,16 +36,17 @@ function cleanName(name: string): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { id, name } = req.query as { id: string; name?: string }
-  if (!id) return res.status(400).json({ error: 'missing id' })
+  const { name } = req.query as { id?: string; name?: string }
+  if (!name) return res.status(400).json({ error: 'missing name' })
 
   try {
     const allSongs: any[] = []
     const seen = new Set<number>()
 
+    // Search iTunes by artist name (cn + tw stores)
     for (const store of ['cn', 'tw']) {
       try {
-        const url = `https://itunes.apple.com/lookup?id=${id}&entity=song&limit=200&country=${store}`
+        const url = `https://itunes.apple.com/search?entity=song&attribute=artistTerm&limit=200&country=${store}&term=${encodeURIComponent(name)}`
         const r = await fetch(url)
         if (!r.ok) continue
         const data: any = await r.json()
@@ -68,36 +69,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } catch { continue }
     }
 
-    if (name) {
-      for (const store of ['cn', 'tw']) {
-        try {
-          const url = `https://itunes.apple.com/search?entity=song&attribute=artistTerm&limit=200&country=${store}&term=${encodeURIComponent(name)}`
-          const r = await fetch(url)
-          if (!r.ok) continue
-          const data: any = await r.json()
-          for (const t of data.results || []) {
-            if (t.wrapperType !== 'track' || !t.trackId || seen.has(t.trackId)) continue
-            if (isLive(t.trackName, t.collectionName || '')) continue
-            if (isJunk(t.trackName)) continue
-            seen.add(t.trackId)
-            allSongs.push({
-              id: String(t.trackId),
-              name: toSimplified(cleanName(t.trackName)),
-              artist: toSimplified(t.artistName || ''),
-              album: (t.collectionName || '').replace(/ - (Single|EP)$/i, ''),
-              year: t.releaseDate ? t.releaseDate.slice(0, 4) : '',
-              cover: (t.artworkUrl100 || '').replace('100x100bb', '300x300bb'),
-              platform: 'apple',
-              playUrl: t.previewUrl || '',
-            })
-          }
-        } catch { continue }
-      }
-    }
-
     if (!allSongs.length) return res.json([])
 
-    // Deduplicate by normalized name (simplified chinese fold)
+    // Deduplicate by normalized name
     const deduped: any[] = []
     const seenNames = new Set<string>()
     for (const s of allSongs) {
@@ -107,11 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       deduped.push(s)
     }
 
-    // Take top 100 by popularity (iTunes already returns hot-first);
-    // cap at 100 so the bracket UI isn't overwhelmed and mostly hot songs stay.
-    const top = deduped.slice(0, 100)
-
-    res.json(top)
+    res.json(deduped.slice(0, 100))
   } catch (e: any) {
     res.status(500).json({ error: e.message || 'get songs failed' })
   }
