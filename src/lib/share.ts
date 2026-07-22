@@ -120,11 +120,11 @@ export async function buildShareImage(singerName: string, rounds: Round[], champ
 
   const colX = (k: number) => M + k * colDX
 
-  // --- champion section layout ---
-  const champSize = chartH >= 600 ? 140 : 110
-  const champCX = W - M - cardW - colDX + 30
+  // --- champion section layout (centered) ---
+  const champSize = chartH >= 600 ? 144 : 114
+  const champCX = W / 2
   const artCY = chartCY
-  const artX = champCX + cardW / 2 - champSize / 2
+  const artX = champCX - champSize / 2
   const artY = artCY - champSize / 2
 
   // --- canvas ---
