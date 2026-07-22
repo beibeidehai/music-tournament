@@ -11,8 +11,8 @@ const DARK = '#0b0b13'
 const M = 36
 const CARD_W = 136; const CARD_H = 44
 const COL_GAP = 20; const V_GAP = 6
-const CHAMP_W = 180
-const CHAMP_SIZE = 140
+const CHAMP_W = 190
+const CHAMP_SIZE = 150
 
 function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   r = Math.min(r, w / 2, h / 2)
@@ -69,8 +69,8 @@ export async function buildShareImage(singerName: string, rounds: Round[], champ
   // Max matches in any half-column
   const maxHalf = Math.max(...bracketRounds.map(r => Math.ceil(r.matches.length / 2)), 1)
   const chartH = maxHalf * (CARD_H + V_GAP) + 8
-  // Reserve space below bracket for champion card
-  const champSectionH = 260
+  // ponytail: champion overlays center, just need enough body for bracket + champion cluster
+  const champSectionH = Math.max(60, CHAMP_SIZE + 180 - chartH)
 
   // Total width: left columns + center gap + champion + center gap + right columns
   const totalW = 2 * nBracket * (CARD_W + COL_GAP) + CHAMP_W + COL_GAP * 2
@@ -158,69 +158,62 @@ export async function buildShareImage(singerName: string, rounds: Round[], champ
     }
   }
 
-  // Lines from last bracket rounds to final
-  if (nBracket > 0) {
+  // --- champion card centered (covers the final match slot) ---
+  if (nBracket > 0 && finalRound.matches[0]) {
     const lastRound = positions[nBracket - 1]
     const lastLeft = lastRound?.[0]
     const lastRight = lastRound?.[(lastRound?.length ?? 1) - 1]
     const finalMatch = finalRound.matches[0]
 
-    // Draw final match card in center
-    const finalCardW = CARD_W + 10; const finalCardH = CARD_H + 8
-    const fX = centerX + (CHAMP_W - finalCardW) / 2
-    const fY = headerH + (chartH - finalCardH) / 2
-    const fPos: Pos = { x: fX, y: fY, w: finalCardW, h: finalCardH, midY: fY + finalCardH / 2 }
-
-    if (finalMatch) {
-      drawMatchCard(ctx, finalMatch, fX, fY, finalCardW, finalCardH, covers)
-    }
-
-    if (lastLeft) drawBracketLine(ctx, lastLeft.x + lastLeft.w, lastLeft.midY, fX, fPos.midY)
-    if (lastRight) drawBracketLine(ctx, lastRight.x, lastRight.midY, fX + finalCardW, fPos.midY)
-  }
-
-  // --- champion card below bracket ---
-  if (finalRound.matches[0]) {
-    const finalMatch = finalRound.matches[0]
-    const bannerTop = headerH + chartH + 4
+    // Total champion cluster height: crown protrude + card + gap + label + name
+    const clusterH = CHAMP_SIZE + 16 + 36 + 8 + 42
+    const bodyCenter = headerH + bodyH / 2
     const cX = centerX + (CHAMP_W - CHAMP_SIZE) / 2
-    const cY = bannerTop + 12
+    const cY = bodyCenter - clusterH / 2 + 10 // slight nudge down for crown
 
+    // Lines from last bracket rounds → champion card edges
+    if (lastLeft) drawBracketLine(ctx, lastLeft.x + lastLeft.w, lastLeft.midY, cX, cY + CHAMP_SIZE / 2)
+    if (lastRight) drawBracketLine(ctx, lastRight.x, lastRight.midY, cX + CHAMP_SIZE, cY + CHAMP_SIZE / 2)
+
+    // Champion card bg
     ctx.save()
-    ctx.shadowColor = 'rgba(29,185,84,0.3)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 12
-    rr(ctx, cX, cY, CHAMP_SIZE, CHAMP_SIZE, 20)
+    ctx.shadowColor = 'rgba(29,185,84,0.35)'; ctx.shadowBlur = 70; ctx.shadowOffsetY = 14
+    rr(ctx, cX, cY, CHAMP_SIZE, CHAMP_SIZE, 22)
     ctx.fillStyle = '#111119'; ctx.fill()
     ctx.restore()
 
+    // Cover image
     const champSong = finalMatch.choice === 'a' ? finalMatch.songA : finalMatch.songB
     const champImg = covers.get(champSong.cover)
-    if (champImg) { ctx.save(); rr(ctx, cX, cY, CHAMP_SIZE, CHAMP_SIZE, 20); ctx.clip(); ctx.drawImage(champImg, cX, cY, CHAMP_SIZE, CHAMP_SIZE); ctx.restore() }
+    if (champImg) { ctx.save(); rr(ctx, cX, cY, CHAMP_SIZE, CHAMP_SIZE, 22); ctx.clip(); ctx.drawImage(champImg, cX, cY, CHAMP_SIZE, CHAMP_SIZE); ctx.restore() }
 
-    rr(ctx, cX, cY, CHAMP_SIZE, CHAMP_SIZE, 20)
-    ctx.strokeStyle = GREEN; ctx.lineWidth = 4; ctx.stroke()
+    // Green border
+    rr(ctx, cX, cY, CHAMP_SIZE, CHAMP_SIZE, 22)
+    ctx.strokeStyle = GREEN; ctx.lineWidth = 5; ctx.stroke()
 
     // Crown
     ctx.save()
-    ctx.translate(cX + CHAMP_SIZE, cY - 4)
+    ctx.translate(cX + CHAMP_SIZE, cY - 6)
     ctx.rotate(0.3)
-    ctx.font = '56px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.font = '64px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
     ctx.fillStyle = '#fff'
     ctx.fillText('👑', 0, 0)
     ctx.restore()
 
+    // Champion label
     let ly = cY + CHAMP_SIZE + 16
     ctx.textAlign = 'center'
     ctx.font = `700 16px ${FONT}`
     const lbl = '🏆 冠军'
     const lw = ctx.measureText(lbl).width + 40
-    rr(ctx, centerX + (CHAMP_W - lw) / 2, ly, lw, 36, 18)
+    rr(ctx, centerX + (CHAMP_W - lw) / 2, ly, lw, 38, 19)
     ctx.fillStyle = grd(ctx, centerX + (CHAMP_W - lw) / 2, ly, centerX + (CHAMP_W + lw) / 2, ly)
     ctx.fill()
     ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'
-    ctx.fillText(lbl, centerX + CHAMP_W / 2, ly + 18)
-    ly += 36 + 8
-    ctx.font = `900 26px ${FONT}`; ctx.fillStyle = '#fff'
-    ctx.fillText(champion, centerX + CHAMP_W / 2, ly + 16)
+    ctx.fillText(lbl, centerX + CHAMP_W / 2, ly + 19)
+    ly += 38 + 8
+    ctx.font = `900 28px ${FONT}`; ctx.fillStyle = '#fff'
+    ctx.fillText(champion, centerX + CHAMP_W / 2, ly + 18)
   }
 
   // Footer
