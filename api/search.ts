@@ -5,8 +5,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!q) return res.status(400).json({ error: 'missing q' })
 
   try {
-    const { search } = await import('@neteasecloudmusicapienhanced/api')
-    const result = await search({ keywords: q, type: 100, limit: 8 })
+    const { default: api } = await import('@neteasecloudmusicapienhanced/api')
+    const result = await api.search({ keywords: q, type: 100, limit: 8 })
     const artists = (result.body?.result?.artists || []).map((a: any) => ({
       id: String(a.id),
       name: a.name,

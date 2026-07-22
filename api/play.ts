@@ -5,8 +5,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!id) return res.status(400).json({ error: 'missing id' })
 
   try {
-    const { song_url } = await import('@neteasecloudmusicapienhanced/api')
-    const result = await song_url({ id, br: 128000 })
+    const { default: api } = await import('@neteasecloudmusicapienhanced/api')
+    const result = await api.song_url({ id, br: 128000 })
     const url = result.body?.data?.[0]?.url || ''
     res.json({ playUrl: url })
   } catch (e: any) {
