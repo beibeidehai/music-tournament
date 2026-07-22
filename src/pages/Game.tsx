@@ -158,19 +158,16 @@ export default function Game() {
     const decisionMs = Date.now() - matchStart
     store.recordChoice(store.currentRound, store.currentMatch, choice, decisionMs)
 
-    // Build next round if last match of a non-first round
-    if (!isFirstRound) {
-      const allDone = store.currentMatch + 1 >= round.matches.length
-      if (allDone) {
-        const nextRoundName = store.rounds[store.currentRound + 1]?.name
-        if (nextRoundName) {
-          // Read fresh round from store — the render-closure `round` is stale after recordChoice
-          const freshRound = useStore.getState().rounds[store.currentRound]
-          const nextRound = buildNextRound(freshRound, nextRoundName)
-          const rounds = [...useStore.getState().rounds]
-          rounds[store.currentRound + 1] = nextRound
-          useStore.getState().setRoundsAndSkip(rounds, store.currentRound)
-        }
+    // Build next round if last match (all rounds, including first)
+    const allDone = store.currentMatch + 1 >= round.matches.length
+    if (allDone) {
+      const nextRoundName = store.rounds[store.currentRound + 1]?.name
+      if (nextRoundName) {
+        const freshRound = useStore.getState().rounds[store.currentRound]
+        const nextRound = buildNextRound(freshRound, nextRoundName)
+        const rounds = [...useStore.getState().rounds]
+        rounds[store.currentRound + 1] = nextRound
+        useStore.getState().setRoundsAndSkip(rounds, store.currentRound)
       }
     }
 
@@ -219,7 +216,16 @@ export default function Game() {
         {round.matches.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60 }}>
             <p style={{ color: '#888', marginBottom: 24 }}>准备进入下一轮...</p>
-            <button onClick={() => { store.setStage('playing'); setMatchStart(Date.now()) }}
+            <button onClick={() => {
+              const prevRound = useStore.getState().rounds[store.currentRound - 1]
+              if (prevRound) {
+                const nextRound = buildNextRound(prevRound, round.name)
+                const rounds = [...useStore.getState().rounds]
+                rounds[store.currentRound] = nextRound
+                useStore.getState().setRoundsAndSkip(rounds, store.currentRound)
+              }
+              setMatchStart(Date.now())
+            }}
               style={{ background: '#1db954', color: '#fff', border: 'none', padding: '12px 40px', borderRadius: 24, cursor: 'pointer', fontSize: 16, fontWeight: 600 }}>
               继续
             </button>
