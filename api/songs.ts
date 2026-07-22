@@ -15,7 +15,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       allSongs.push(...songs)
     }
 
-    const mapped = allSongs.map((s: any) => ({
+    // 去重：同名歌曲只保留第一个（通常是热度最高的版本）
+    const seen = new Set<string>()
+    const deduped = allSongs.filter((s: any) => {
+      const key = s.name?.trim()
+      if (!key || seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+
+    const mapped = deduped.map((s: any) => ({
       id: String(s.id),
       name: s.name,
       artist: s.ar?.map((a: any) => a.name).join('/') || '',
