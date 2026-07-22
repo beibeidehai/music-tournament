@@ -5,7 +5,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!q) return res.status(400).json({ error: 'missing q' })
 
   try {
-    const { default: api } = await import('@neteasecloudmusicapienhanced/api')
+    const mod = await import('@neteasecloudmusicapienhanced/api')
+    const api = mod.default || mod
+    if (typeof api.search !== 'function') {
+      return res.status(500).json({ error: 'search not a function', keys: Object.keys(api).slice(0, 5) })
+    }
     const result = await api.search({ keywords: q, type: 100, limit: 8 })
     const artists = (result.body?.result?.artists || []).map((a: any) => ({
       id: String(a.id),

@@ -5,7 +5,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!id) return res.status(400).json({ error: 'missing id' })
 
   try {
-    const { default: api } = await import('@neteasecloudmusicapienhanced/api')
+    const mod = await import('@neteasecloudmusicapienhanced/api')
+    const api = mod.default || mod
     const allSongs: any[] = []
     for (let offset = 0; offset < 200; offset += 100) {
       const result = await api.artist_songs({ id, limit: 100, offset, order: 'hot' })
