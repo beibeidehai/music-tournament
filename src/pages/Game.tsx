@@ -15,10 +15,9 @@ function buildRemainingRounds(pool: Song[], firstRound: Round): Round[] {
   const rounds: Round[] = [firstRound]
   let cur = [...pool]
   for (const name of config.rounds.slice(1)) {
-    const shuffled = [...cur].sort(() => Math.random() - 0.5)
     const matches: Round['matches'] = []
-    for (let i = 0; i < shuffled.length; i += 2) {
-      matches.push({ songA: shuffled[i], songB: shuffled[i + 1] || shuffled[i], choice: null, decisionMs: 0 })
+    for (let i = 0; i < cur.length; i += 2) {
+      matches.push({ songA: cur[i], songB: cur[i + 1] || cur[i], choice: null, decisionMs: 0 })
     }
     rounds.push({ name, matches })
     // 预留空槽给下一轮（在 buildNextRound 中动态填充）
@@ -227,7 +226,7 @@ export default function Game() {
           }}>
             ← 首页
           </button>
-          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v3.6</span></span>
+          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v3.7</span></span>
         </div>
 
         <ProgressBar roundName={round.name} current={store.currentMatch} total={round.matches.length} />

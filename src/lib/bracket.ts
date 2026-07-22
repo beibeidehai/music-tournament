@@ -49,12 +49,11 @@ export function buildNextRound(prevRound: Round, roundName: string): Round {
     else if (m.choice === 'a') { winners.push(m.songA) }
     else if (m.choice === 'b') { winners.push(m.songB) }
   }
-  const shuffled = shuffle(winners)
   const matches: Round['matches'] = []
-  for (let i = 0; i < shuffled.length; i += 2) {
+  for (let i = 0; i < winners.length; i += 2) {
     matches.push({
-      songA: shuffled[i],
-      songB: shuffled[i + 1] || shuffled[i],
+      songA: winners[i],
+      songB: winners[i + 1] || winners[i],
       choice: null,
       decisionMs: 0,
     })

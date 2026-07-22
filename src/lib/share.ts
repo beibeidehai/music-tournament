@@ -1,10 +1,16 @@
-// Canvas export — horizontal columns, no confusing lines, clean & readable
+// Canvas export — converging bracket: left/right halves → center champion
 import type { Round, Song } from '../types'
 
 const SCALE = 2
 const FONT = '"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif'
 const GREEN = '#1db954'; const GREEN2 = '#169c46'
 const DARK = '#0b0b13'
+
+// Layout constants
+const M = 36
+const CARD_W = 136; const CARD_H = 44
+const COL_GAP = 20; const V_GAP = 6
+const CHAMP_W = 130
 
 function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   r = Math.min(r, w / 2, h / 2)
@@ -31,17 +37,14 @@ function fit(ctx: CanvasRenderingContext2D, t: string, w: number): string {
   return s + '…'
 }
 
-function grd(ctx: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number) {
-  const g = ctx.createLinearGradient(x0, y0, x1, y1)
-  g.addColorStop(0, GREEN); g.addColorStop(1, GREEN2); return g
-}
+type Pos = { x: number; y: number; w: number; h: number; midY: number }
 
 export async function buildShareImage(singerName: string, rounds: Round[], champion: string) {
   const visible = rounds.filter(r => r.matches.length > 0)
-  const nCols = visible.length
-  if (!nCols) throw new Error('no rounds')
+  const nRounds = visible.length
+  if (!nRounds) throw new Error('no rounds')
 
-  // --- collect songs & load covers ---
+  // --- load covers ---
   const allCovers: string[] = []
   const seen = new Set<string>()
   for (const r of rounds) for (const m of r.matches) {
@@ -51,18 +54,23 @@ export async function buildShareImage(singerName: string, rounds: Round[], champ
   const covers = new Map<string, HTMLImageElement | null>()
   await Promise.all(allCovers.slice(0, 60).map(async u => { covers.set(u, await loadImg(u)) }))
 
-  // --- layout: horizontal columns ---
-  const M = 32; const colGap = 20
-  const cardW = 148; const cardH = 52
-  const maxMatches = Math.max(...visible.map(r => r.matches.length))
-  const chartH = maxMatches * (cardH + 8) + 20
-  const totalW = nCols * cardW + (nCols - 1) * colGap
-  const champW = 150
+  // --- layout ---
+  const bracketRounds = visible.slice(0, -1)  // rounds split into L/R halves
+  const finalRound = visible[nRounds - 1]
+  const nBracket = bracketRounds.length
 
-  // Dynamic width: bracket columns + champion
-  const W = Math.max(900, M * 2 + totalW + colGap + champW)
+  // Max matches in any half-column
+  const maxHalf = Math.max(...bracketRounds.map(r => Math.ceil(r.matches.length / 2)), 1)
+  const chartH = maxHalf * (CARD_H + V_GAP) + 8
+  // Reserve space below bracket for champion card
+  const champSectionH = 210
+
+  // Total width: left columns + center gap + champion + center gap + right columns
+  const totalW = 2 * nBracket * (CARD_W + COL_GAP) + CHAMP_W + COL_GAP * 2
+  const W = Math.max(1000, M * 2 + totalW)
   const headerH = 130; const footerH = 80
-  const H = headerH + chartH + footerH
+  const bodyH = chartH + champSectionH
+  const H = headerH + bodyH + footerH
 
   const cv = document.createElement('canvas')
   cv.width = W * SCALE; cv.height = H * SCALE
@@ -75,7 +83,7 @@ export async function buildShareImage(singerName: string, rounds: Round[], champ
   ctx.fillStyle = bgG; ctx.fillRect(0, 0, W, H)
 
   // Glow
-  const gl = ctx.createRadialGradient(W / 2, headerH + chartH / 2, 0, W / 2, headerH + chartH / 2, 500)
+  const gl = ctx.createRadialGradient(W / 2, headerH + bodyH / 2, 0, W / 2, headerH + bodyH / 2, 500)
   gl.addColorStop(0, 'rgba(29,185,84,0.05)'); gl.addColorStop(1, 'transparent')
   ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H)
 
@@ -83,114 +91,133 @@ export async function buildShareImage(singerName: string, rounds: Round[], champ
   ctx.textAlign = 'center'
   ctx.font = `900 36px ${FONT}`; ctx.fillStyle = '#fff'
   ctx.fillText(`${singerName} · 歌曲淘汰赛`, W / 2, 44)
-  const total = rounds.reduce((a, r) => a + r.matches.length, 0)
+  const totalMatches = rounds.reduce((a, r) => a + r.matches.length, 0)
   ctx.font = `500 18px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.4)'
-  ctx.fillText(`${total} 组对决  ·  冠军 ${champion}`, W / 2, 78)
+  ctx.fillText(`${totalMatches} 组对决  ·  冠军 ${champion}`, W / 2, 78)
   ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1.5
   ctx.beginPath(); ctx.moveTo(M, headerH - 8); ctx.lineTo(W - M, headerH - 8); ctx.stroke()
 
-  // Round columns
-  const startX = M + Math.max(0, (W - M * 2 - totalW - colGap - champW) / 2)
-  visible.forEach((round, ri) => {
-    const x = startX + ri * (cardW + colGap)
+  // Column x-positions (center of each column)
+  const startX = M + (W - M * 2 - totalW) / 2
+  const colX = (i: number) => startX + i * (CARD_W + COL_GAP)
+  // Center champion column starts after all left columns + gap
+  const centerX = startX + nBracket * (CARD_W + COL_GAP) + COL_GAP
+  // Right columns start after center
+  const rightStartX = centerX + CHAMP_W + COL_GAP
+
+  // Track match positions for bracket lines
+  const positions: (Pos | null)[][] = []
+
+  // --- draw bracket rounds ---
+  bracketRounds.forEach((round, ri) => {
     const matches = round.matches
-    const colH = matches.length * (cardH + 8)
-    const startY = headerH + (chartH - colH) / 2
+    const mid = Math.ceil(matches.length / 2)
+    const leftHalf = matches.slice(0, mid)
+    const rightHalf = matches.slice(mid)
 
-    // Round name
-    ctx.textAlign = 'center'
-    ctx.font = `700 13px ${FONT}`; ctx.fillStyle = GREEN
-    ctx.fillText(round.name, x + cardW / 2, startY - 10)
+    positions[ri] = []
 
-    matches.forEach((m, mi) => {
-      const y = startY + mi * (cardH + 8)
-      const aW = m.choice === 'a' || m.choice === 'both'
-      const bW = m.choice === 'b' || m.choice === 'both'
+    // Left column
+    const lx = colX(ri)
+    drawColumn(ctx, round.name + ' (上半区)', leftHalf, lx, headerH, chartH, covers, ri, positions, 0)
 
-      // Card bg
-      rr(ctx, x, y, cardW, cardH, 10)
-      ctx.fillStyle = m.choice ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)'
-      ctx.fill()
-      ctx.strokeStyle = m.choice ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'
-      ctx.lineWidth = 1; rr(ctx, x, y, cardW, cardH, 10); ctx.stroke()
-
-      // Match number
-      ctx.textAlign = 'right'
-      ctx.font = `400 8px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.15)'
-      ctx.fillText(`#${mi + 1}`, x + cardW - 6, y + 10)
-
-      // Song A (top half)
-      const half = cardH / 2
-      if (aW) { ctx.fillStyle = 'rgba(29,185,84,0.1)'; ctx.fillRect(x + 1, y + 1, cardW - 2, half - 2) }
-      const coverA = covers.get(m.songA.cover)
-      const cs = half - 10
-      if (coverA) { ctx.save(); rr(ctx, x + 5, y + 5, cs, cs, 5); ctx.clip(); ctx.drawImage(coverA, x + 5, y + 5, cs, cs); ctx.restore() }
-      else { ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(x + 5, y + 5, cs, cs) }
-      ctx.textAlign = 'left'; ctx.textBaseline = 'middle'
-      ctx.font = `${aW ? 700 : 400} 10px ${FONT}`
-      ctx.fillStyle = aW ? '#fff' : 'rgba(255,255,255,0.28)'
-      ctx.fillText(fit(ctx, m.songA.name, cardW - cs - 18), x + cs + 10, y + half / 2 + 1)
-
-      // Divider
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath()
-      ctx.moveTo(x + 6, y + half); ctx.lineTo(x + cardW - 6, y + half); ctx.stroke()
-
-      // Song B (bottom half)
-      if (bW) { ctx.fillStyle = 'rgba(29,185,84,0.1)'; ctx.fillRect(x + 1, y + half + 1, cardW - 2, half - 2) }
-      const coverB = covers.get(m.songB.cover)
-      if (coverB) { ctx.save(); rr(ctx, x + 5, y + half + 5, cs, cs, 5); ctx.clip(); ctx.drawImage(coverB, x + 5, y + half + 5, cs, cs); ctx.restore() }
-      else { ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(x + 5, y + half + 5, cs, cs) }
-      ctx.fillStyle = bW ? '#fff' : 'rgba(255,255,255,0.28)'
-      ctx.fillText(fit(ctx, m.songB.name, cardW - cs - 18), x + cs + 10, y + half + half / 2 + 1)
-    })
+    // Right column (positioned symmetrically)
+    const rx = rightStartX + (nBracket - 1 - ri) * (CARD_W + COL_GAP)
+    drawColumn(ctx, round.name + ' (下半区)', rightHalf, rx, headerH, chartH, covers, ri, positions, leftHalf.length)
   })
 
-  // Champion card
-  const champX = startX + nCols * (cardW + colGap) + 8
-  const champCY = headerH + chartH / 2
-  const cSize = 110
-  const cX = champX + (champW - cSize) / 2
-  const cY = champCY - cSize / 2
+  // --- draw bracket lines ---
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1
+  for (let ri = 0; ri < nBracket - 1; ri++) {
+    const cur = positions[ri]
+    if (!cur) continue
+    for (let mi = 0; mi < cur.length; mi++) {
+      const pos = cur[mi]
+      if (!pos) continue
+      const parentMi = Math.floor(mi / 2)
+      const parent = positions[ri + 1]?.[parentMi]
+      if (!parent) continue
 
-  ctx.save()
-  ctx.shadowColor = 'rgba(29,185,84,0.25)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 10
-  rr(ctx, cX, cY, cSize, cSize, 18)
-  ctx.fillStyle = '#111119'; ctx.fill()
-  ctx.restore()
+      // Determine direction: left half → exit right, right half → exit left
+      const isLeft = mi < Math.ceil(cur.length / 2) || (cur.length <= 2 && mi === 0)
+      // ponytail: simpler heuristic — if card is left of centerX, it's left half
+      const leftSide = pos.x + pos.w / 2 < centerX
 
-  // Champion cover
-  const champSong = rounds[rounds.length - 1]?.matches[0]
-  const champCover = champSong ? (champSong.choice === 'a' ? champSong.songA.cover : champSong.songB.cover) : ''
-  const champImg = covers.get(champCover)
-  if (champImg) { ctx.save(); rr(ctx, cX, cY, cSize, cSize, 18); ctx.clip(); ctx.drawImage(champImg, cX, cY, cSize, cSize); ctx.restore() }
+      if (leftSide) {
+        drawBracketLine(ctx, pos.x + pos.w, pos.midY, parent.x, parent.midY)
+      } else {
+        drawBracketLine(ctx, pos.x, pos.midY, parent.x + parent.w, parent.midY)
+      }
+    }
+  }
 
-  rr(ctx, cX, cY, cSize, cSize, 18)
-  ctx.strokeStyle = GREEN; ctx.lineWidth = 3; ctx.stroke()
+  // Lines from last bracket rounds to final
+  if (nBracket > 0) {
+    const lastRound = positions[nBracket - 1]
+    const lastLeft = lastRound?.[0]
+    const lastRight = lastRound?.[(lastRound?.length ?? 1) - 1]
+    const finalMatch = finalRound.matches[0]
 
-  ctx.save()
-  ctx.translate(cX + cSize, cY)
-  ctx.rotate(0.3)
-  ctx.font = '48px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-  ctx.fillStyle = '#fff'
-  ctx.fillText('👑', 0, 0)
-  ctx.restore()
+    // Draw final match card in center
+    const finalCardW = CARD_W + 10; const finalCardH = CARD_H + 8
+    const fX = centerX + (CHAMP_W - finalCardW) / 2
+    const fY = headerH + (chartH - finalCardH) / 2
+    const fPos: Pos = { x: fX, y: fY, w: finalCardW, h: finalCardH, midY: fY + finalCardH / 2 }
 
-  let ly = cY + cSize + 14
-  ctx.textAlign = 'center'
-  ctx.font = `700 15px ${FONT}`
-  const lbl = '🏆 冠军'
-  const lw = ctx.measureText(lbl).width + 36
-  rr(ctx, champX + (champW - lw) / 2, ly, lw, 32, 16)
-  ctx.fillStyle = grd(ctx, champX + (champW - lw) / 2, ly, champX + (champW + lw) / 2, ly)
-  ctx.fill()
-  ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'
-  ctx.fillText(lbl, champX + champW / 2, ly + 16)
-  ly += 32 + 6
-  ctx.font = `900 22px ${FONT}`; ctx.fillStyle = '#fff'
-  ctx.fillText(champion, champX + champW / 2, ly + 14)
+    if (finalMatch) {
+      drawMatchCard(ctx, finalMatch, fX, fY, finalCardW, finalCardH, covers)
+    }
+
+    if (lastLeft) drawBracketLine(ctx, lastLeft.x + lastLeft.w, lastLeft.midY, fX, fPos.midY)
+    if (lastRight) drawBracketLine(ctx, lastRight.x, lastRight.midY, fX + finalCardW, fPos.midY)
+  }
+
+  // --- champion card below bracket ---
+  if (finalRound.matches[0]) {
+    const finalMatch = finalRound.matches[0]
+    const bannerTop = headerH + chartH + 8
+    const cSize = 100
+    const cX = centerX + (CHAMP_W - cSize) / 2
+    const cY = bannerTop + 20
+
+    ctx.save()
+    ctx.shadowColor = 'rgba(29,185,84,0.25)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 10
+    rr(ctx, cX, cY, cSize, cSize, 18)
+    ctx.fillStyle = '#111119'; ctx.fill()
+    ctx.restore()
+
+    const champSong = finalMatch.choice === 'a' ? finalMatch.songA : finalMatch.songB
+    const champImg = covers.get(champSong.cover)
+    if (champImg) { ctx.save(); rr(ctx, cX, cY, cSize, cSize, 18); ctx.clip(); ctx.drawImage(champImg, cX, cY, cSize, cSize); ctx.restore() }
+
+    rr(ctx, cX, cY, cSize, cSize, 18)
+    ctx.strokeStyle = GREEN; ctx.lineWidth = 3; ctx.stroke()
+
+    ctx.save()
+    ctx.translate(cX + cSize, cY)
+    ctx.rotate(0.3)
+    ctx.font = '48px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.fillStyle = '#fff'
+    ctx.fillText('👑', 0, 0)
+    ctx.restore()
+
+    let ly = cY + cSize + 14
+    ctx.textAlign = 'center'
+    ctx.font = `700 15px ${FONT}`
+    const lbl = '🏆 冠军'
+    const lw = ctx.measureText(lbl).width + 36
+    rr(ctx, centerX + (CHAMP_W - lw) / 2, ly, lw, 32, 16)
+    ctx.fillStyle = grd(ctx, centerX + (CHAMP_W - lw) / 2, ly, centerX + (CHAMP_W + lw) / 2, ly)
+    ctx.fill()
+    ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'
+    ctx.fillText(lbl, centerX + CHAMP_W / 2, ly + 16)
+    ly += 32 + 6
+    ctx.font = `900 22px ${FONT}`; ctx.fillStyle = '#fff'
+    ctx.fillText(champion, centerX + CHAMP_W / 2, ly + 14)
+  }
 
   // Footer
-  const fy = headerH + chartH + 20
+  const fy = headerH + bodyH + 1
   ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1
   ctx.beginPath(); ctx.moveTo(M, fy); ctx.lineTo(W - M, fy); ctx.stroke()
   ctx.textAlign = 'center'
@@ -206,4 +233,96 @@ export async function buildShareImage(singerName: string, rounds: Round[], champ
   ctx.globalAlpha = 1
 
   return new Promise<Blob>(res => cv.toBlob(b => res(b!), 'image/jpeg', 0.92))
+}
+
+function grd(ctx: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number) {
+  const g = ctx.createLinearGradient(x0, y0, x1, y1)
+  g.addColorStop(0, GREEN); g.addColorStop(1, GREEN2); return g
+}
+
+function drawBracketLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
+  const dx = Math.abs(x2 - x1)
+  const cp = dx * 0.45
+  ctx.beginPath()
+  ctx.moveTo(x1, y1)
+  ctx.bezierCurveTo(x1 + cp, y1, x2 - cp, y2, x2, y2)
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)'
+  ctx.stroke()
+}
+
+function drawColumn(
+  ctx: CanvasRenderingContext2D,
+  name: string,
+  matches: Round['matches'],
+  x: number,
+  headerH: number,
+  chartH: number,
+  covers: Map<string, HTMLImageElement | null>,
+  roundIdx: number,
+  positions: (Pos | null)[][],
+  offset: number,
+) {
+  const colH = matches.length * (CARD_H + V_GAP)
+  const startY = headerH + (chartH - colH) / 2
+
+  // Round label
+  ctx.textAlign = 'center'
+  ctx.font = `700 11px ${FONT}`; ctx.fillStyle = GREEN
+  ctx.fillText(name, x + CARD_W / 2, startY - 8)
+
+  if (!positions[roundIdx]) positions[roundIdx] = []
+
+  matches.forEach((m, mi) => {
+    const y = startY + mi * (CARD_H + V_GAP)
+    drawMatchCard(ctx, m, x, y, CARD_W, CARD_H, covers)
+
+    const pos: Pos = { x, y, w: CARD_W, h: CARD_H, midY: y + CARD_H / 2 }
+    positions[roundIdx][offset + mi] = pos
+  })
+}
+
+function drawMatchCard(
+  ctx: CanvasRenderingContext2D,
+  m: Round['matches'][0],
+  x: number, y: number, w: number, h: number,
+  covers: Map<string, HTMLImageElement | null>,
+) {
+  const aW = m.choice === 'a' || m.choice === 'both'
+  const bW = m.choice === 'b' || m.choice === 'both'
+  const half = h / 2
+  const cs = half - 8  // cover size
+
+  // Card bg
+  rr(ctx, x, y, w, h, 9)
+  ctx.fillStyle = m.choice ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)'
+  ctx.fill()
+  ctx.strokeStyle = m.choice ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'
+  ctx.lineWidth = 1; rr(ctx, x, y, w, h, 9); ctx.stroke()
+
+  // Match number
+  ctx.textAlign = 'right'
+  ctx.font = `400 7px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.12)'
+  ctx.fillText(`#${(m as any)._idx ?? ''}`, x + w - 5, y + 9)
+
+  // Song A
+  if (aW) { ctx.fillStyle = 'rgba(29,185,84,0.1)'; ctx.fillRect(x + 1, y + 1, w - 2, half - 2) }
+  const coverA = covers.get(m.songA.cover)
+  if (coverA) { ctx.save(); rr(ctx, x + 4, y + 4, cs, cs, 4); ctx.clip(); ctx.drawImage(coverA, x + 4, y + 4, cs, cs); ctx.restore() }
+  else { ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(x + 4, y + 4, cs, cs) }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle'
+  ctx.font = `${aW ? 700 : 400} 9px ${FONT}`
+  ctx.fillStyle = aW ? '#fff' : 'rgba(255,255,255,0.28)'
+  ctx.fillText(fit(ctx, m.songA.name, w - cs - 16), x + cs + 8, y + half / 2 + 1)
+
+  // Divider
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath()
+  ctx.moveTo(x + 5, y + half); ctx.lineTo(x + w - 5, y + half); ctx.stroke()
+
+  // Song B
+  if (bW) { ctx.fillStyle = 'rgba(29,185,84,0.1)'; ctx.fillRect(x + 1, y + half + 1, w - 2, half - 2) }
+  const coverB = covers.get(m.songB.cover)
+  if (coverB) { ctx.save(); rr(ctx, x + 4, y + half + 4, cs, cs, 4); ctx.clip(); ctx.drawImage(coverB, x + 4, y + half + 4, cs, cs); ctx.restore() }
+  else { ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(x + 4, y + half + 4, cs, cs) }
+  ctx.fillStyle = bW ? '#fff' : 'rgba(255,255,255,0.28)'
+  ctx.fillText(fit(ctx, m.songB.name, w - cs - 16), x + cs + 8, y + half + half / 2 + 1)
 }
