@@ -1,81 +1,76 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+// Normalize name for cross-platform matching
+function norm(s: string): string {
+  return s.toLowerCase().replace(/[\s·•\.\-_]+/g, '').trim()
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const q = req.query.q as string
   if (!q) return res.status(400).json({ error: 'missing q' })
 
   try {
-    // 1. Search both platforms in parallel
+    // 1. Fetch both platforms in parallel
     const mod = await import('@neteasecloudmusicapienhanced/api')
     const neteaseApi = mod.default || mod
 
-    const [neteaseR, itunesR_cn, itunesR_tw] = await Promise.allSettled([
-      neteaseApi.search({ keywords: q, type: 100, limit: 15 }),
+    const [neteaseR, itunesR] = await Promise.allSettled([
+      neteaseApi.search({ keywords: q, type: 100, limit: 12 }),
       fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=musicArtist&limit=10&country=cn`),
-      fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=musicArtist&limit=10&country=tw`),
     ])
 
-    // Parse Netease results → map by name for avatar lookup
-    const neteaseByName = new Map<string, { avatar: string; songCount: number }>()
+    // Parse Netease → name → {avatar, albumSize}
+    const neMap = new Map<string, { avatar: string; albumSize: number }>()
     if (neteaseR.status === 'fulfilled') {
-      const artists = (neteaseR.value as any)?.body?.result?.artists || []
-      for (const a of artists) {
-        const key = a.name.toLowerCase().trim()
-        if (!neteaseByName.has(key)) {
-          neteaseByName.set(key, { avatar: a.picUrl || a.img1v1Url || '', songCount: a.albumSize || 0 })
-        }
+      const list = (neteaseR.value as any)?.body?.result?.artists || []
+      for (const a of list) {
+        const key = norm(a.name)
+        if (!neMap.has(key)) neMap.set(key, { avatar: a.picUrl || a.img1v1Url || '', albumSize: a.albumSize || 0 })
       }
     }
 
-    // Parse iTunes results (both stores)
-    const itunesArtists = new Map<number, { id: string; name: string }>()
-    for (const r of [itunesR_cn, itunesR_tw]) {
-      if (r.status !== 'fulfilled' || !r.value.ok) continue
-      const data: any = await r.value.json()
+    // Parse iTunes → name → id
+    const itList: { id: string; name: string }[] = []
+    if (itunesR.status === 'fulfilled' && itunesR.value.ok) {
+      const data: any = await itunesR.value.json()
       for (const a of data.results || []) {
         if (a.wrapperType !== 'artist') continue
-        if (!itunesArtists.has(a.artistId)) {
-          itunesArtists.set(a.artistId, { id: String(a.artistId), name: a.artistName })
-        }
+        itList.push({ id: String(a.artistId), name: a.artistName })
       }
     }
 
-    // 2. Cross-reference: only artists in BOTH platforms
-    const artists: any[] = []
-    for (const [, ita] of itunesArtists) {
-      const itName = ita.name.toLowerCase().trim()
-      // Match by name (try exact and variations)
-      let ne = neteaseByName.get(itName)
-      if (!ne) {
-        // Try without spaces
-        for (const [k, v] of neteaseByName) {
-          if (k.replace(/\s+/g, '') === itName.replace(/\s+/g, '')) { ne = v; break }
-        }
-      }
-      if (!ne) continue // Not in both platforms → skip
+    // 2. Cross-reference: match by normalized name
+    const matched = itList.filter(it => neMap.has(norm(it.name)))
+    if (!matched.length) return res.json([])
 
-      // 3. Get actual song count from iTunes (resultCount from search)
-      let songCount = ne.songCount // fallback to Netease album count
+    // 3. Get song counts from iTunes in parallel
+    const withCounts = await Promise.allSettled(matched.map(async (it) => {
+      const ne = neMap.get(norm(it.name))!
       try {
-        const scR = await fetch(
-          `https://itunes.apple.com/search?term=${encodeURIComponent(ita.name)}&entity=song&attribute=artistTerm&limit=1&country=cn`
+        const r = await fetch(
+          `https://itunes.apple.com/search?term=${encodeURIComponent(it.name)}&entity=song&attribute=artistTerm&limit=1&country=cn`
         )
-        if (scR.ok) {
-          const scData: any = await scR.json()
-          if (scData.resultCount > 0) songCount = scData.resultCount
-        }
-      } catch { /* use fallback */ }
+        if (!r.ok) return { ...it, avatar: ne.avatar, songCount: 0 }
+        const d: any = await r.json()
+        return { ...it, avatar: ne.avatar, songCount: d.resultCount || 0 }
+      } catch {
+        return { ...it, avatar: ne.avatar, songCount: ne.albumSize }
+      }
+    }))
 
-      if (songCount < 8) continue // Filter < 8 songs
-
-      artists.push({
-        id: ita.id,
-        name: ita.name,
-        avatar: ne.avatar,
-        songCount,
+    // 4. Filter and return
+    const artists = withCounts
+      .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
+      .map(r => r.value)
+      .filter((a: any) => a.songCount >= 8)
+      .sort((a: any, b: any) => b.songCount - a.songCount)
+      .map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        avatar: a.avatar,
+        songCount: a.songCount,
         platform: 'apple',
-      })
-    }
+      }))
 
     res.json(artists)
   } catch (e: any) {
