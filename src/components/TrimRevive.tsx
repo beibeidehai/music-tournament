@@ -40,7 +40,7 @@ export default function TrimRevive({ mode, candidates, target, onConfirm }: Prop
         <div style={{ height: 4, background: '#eee', borderRadius: 2, marginBottom: 20 }}>
           <div style={{
             width: `${(current / target) * 100}%`, height: '100%',
-            background: isOk ? '#1db954' : '#f5a623',
+            background: isOk ? '#20b860' : '#f5a623',
             borderRadius: 2, transition: 'width 0.3s ease',
           }} />
         </div>
@@ -91,11 +91,11 @@ export default function TrimRevive({ mode, candidates, target, onConfirm }: Prop
           disabled={!isOk}
           style={{
             width: '100%', padding: 16, marginTop: 24,
-            background: isOk ? 'linear-gradient(135deg, #1db954, #169c46)' : '#ddd',
+            background: isOk ? 'linear-gradient(135deg, #20b860, #189a4c)' : '#ddd',
             color: '#fff', border: 'none', borderRadius: 16, fontSize: 17,
             cursor: isOk ? 'pointer' : 'not-allowed',
             fontWeight: 700,
-            boxShadow: isOk ? '0 4px 16px rgba(29,185,84,0.25)' : 'none',
+            boxShadow: isOk ? '0 4px 16px rgba(32,184,96,0.25)' : 'none',
             transition: 'all 0.2s ease',
           }}
         >

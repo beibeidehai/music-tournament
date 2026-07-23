@@ -106,11 +106,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       deduped.push(s)
     }
 
-    // Filter: only songs by this artist (iTunes search can return fuzzy matches)
-    const singerNameSimplified = toSimplified(String(name || '')).toLowerCase()
-    const filtered = singerNameSimplified
-      ? deduped.filter(s => toSimplified(s.artist).toLowerCase().includes(singerNameSimplified))
-      : deduped
+    // Exclude compilation / various-artists junk (iTunes occasionally returns these)
+    const junkArtists = /^(various artists|various|compilation|karaoke|original soundtrack|群星|众艺人|合辑)$/i
+    const filtered = deduped.filter(s => !junkArtists.test(toSimplified(s.artist).trim()))
 
     res.json(filtered.slice(0, 100))
   } catch (e: any) {

@@ -5,7 +5,7 @@ interface Props {
   champion: string
 }
 
-const accent = '#1db954'
+const accent = '#20b860'
 
 const STYLE = `
 @keyframes star-move-top {
