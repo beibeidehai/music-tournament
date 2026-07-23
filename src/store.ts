@@ -12,6 +12,7 @@ interface Store extends GameState {
   setStage: (stage: GameStage) => void
   recordChoice: (roundIdx: number, matchIdx: number, choice: GameState['rounds'][0]['matches'][0]['choice'], decisionMs: number) => void
   reset: () => void
+  resetGame: () => void
 }
 
 const initialState: GameState = {
@@ -79,6 +80,12 @@ export const useStore = create<Store>()(
         }),
 
       reset: () => set({ ...initialState }),
+
+      resetGame: () => set(s => ({
+        rounds: [], allSongs: [], currentRound: 0, currentMatch: 0,
+        stage: 'playing' as GameStage, startedAt: Date.now(),
+        singer: s.singer, // keep singer
+      })),
     }),
     { name: 'music-tournament', version: 2 }
   )

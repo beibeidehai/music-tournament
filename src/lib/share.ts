@@ -68,7 +68,7 @@ export async function buildShareImage(
 
   // QR code
   let qrDataUrl = ''
-  try { qrDataUrl = await QRCode.toDataURL('https://echoesvs.site', { width: 200, margin: 1 }) }
+  try { qrDataUrl = await QRCode.toDataURL('https://echoesvs.site', { width: 300, margin: 1 }) }
   catch { /* skip qr */ }
 
   if (opts?.vertical) {
@@ -371,7 +371,7 @@ async function drawFooter(ctx: CanvasRenderingContext2D, W: number, fy: number, 
   ctx.fillText('echoesvs.site', M, fy + 34)
 
   if (qrDataUrl) {
-    const qrSize = 72
+    const qrSize = 96
     const qrX = W - M - qrSize
     const qrY = fy
     rr(ctx, qrX - 4, qrY - 4, qrSize + 8, qrSize + 8, 8)

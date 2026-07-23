@@ -9,7 +9,7 @@ const cardBg = '#fafafa'
 
 export default function Home() {
   const navigate = useNavigate()
-  const { singer, setSinger, reset } = useStore()
+  const { singer, setSinger, reset, resetGame } = useStore()
 
   const handleSelect = (s: Singer) => {
     reset()
@@ -20,6 +20,7 @@ export default function Home() {
     <div style={{
       minHeight: '100vh', background: 'linear-gradient(180deg, #fff 0%, #fafafa 100%)',
       position: 'relative', overflow: 'hidden',
+      paddingBottom: 'calc(130px + env(safe-area-inset-bottom, 0px))',
     }}>
       {/* Three.js Pixel Blast background */}
       <PixelBlast
@@ -48,7 +49,7 @@ export default function Home() {
         </div>
 
         <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.5px', color: '#111' }}>
-          音乐淘汰赛 <span style={{ background: '#ff6b35', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, verticalAlign: 'middle', fontWeight: 700 }}>v4.16</span>
+          音乐淘汰赛 <span style={{ background: '#ff6b35', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, verticalAlign: 'middle', fontWeight: 700 }}>v4.19</span>
         </h1>
         <p style={{ color: '#777', fontSize: 15, marginBottom: 28, lineHeight: 1.5 }}>
           搜索一位歌手，两两对决，选出你心中的最佳曲目
@@ -87,7 +88,7 @@ export default function Home() {
               </div>
 
               <button
-                onClick={() => navigate(`/game?singer=${encodeURIComponent(singer.id)}&name=${encodeURIComponent(singer.name)}`)}
+                onClick={() => { resetGame(); navigate(`/game?singer=${encodeURIComponent(singer.id)}&name=${encodeURIComponent(singer.name)}`) }}
                 style={{
                   background: `linear-gradient(135deg, ${accent}, #333)`,
                   color: '#fff', border: 'none',
@@ -115,21 +116,22 @@ export default function Home() {
         )}
       </div>
 
-      {/* Promo footer — locked to bottom */}
+      {/* Promo — bottom-right corner */}
       <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
-        borderTop: '1px solid #e8e8e8',
+        position: 'fixed', bottom: `calc(16px + env(safe-area-inset-bottom, 0px))`, right: 16, zIndex: 10,
         background: 'rgba(255,255,255,0.92)',
         backdropFilter: 'blur(8px)',
-        padding: '10px 20px calc(10px + env(safe-area-inset-bottom))',
+        borderRadius: 14,
+        padding: '8px 10px',
+        boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
+        maxWidth: 150,
         textAlign: 'center',
       }}>
-        <p style={{ color: '#bbb', fontSize: 11, margin: '0 0 4px' }}>
+        <p style={{ color: '#aaa', fontSize: 9, margin: '0 0 4px', lineHeight: 1.4 }}>
           不知道和朋友出门吃饭吃什么 试试这个吧
         </p>
-        <img src="/cfbxcx.png" alt="吃饭不想测" style={{ maxWidth: 90, borderRadius: 8, opacity: 0.55 }} />
+        <img src="/cfbxcx.png" alt="吃饭不想测" style={{ width: 60, borderRadius: 8, opacity: 0.7 }} />
       </div>
-      <div style={{ height: 90 }} />
     </div>
   )
 }

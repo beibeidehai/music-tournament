@@ -41,7 +41,7 @@ export default function Result() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0b0b13', paddingBottom: 40 }}>
+    <div style={{ minHeight: '100vh', background: '#0b0b13', paddingBottom: 'calc(130px + env(safe-area-inset-bottom, 0px))' }}>
       <div style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 20px' }}>
         {/* Nav */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
@@ -151,21 +151,22 @@ export default function Result() {
 
       </div>
 
-      {/* Promo footer — locked to bottom */}
+      {/* Promo — bottom-right corner */}
       <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        background: 'rgba(11,11,19,0.92)',
+        position: 'fixed', bottom: `calc(16px + env(safe-area-inset-bottom, 0px))`, right: 16, zIndex: 10,
+        background: 'rgba(20,20,30,0.88)',
         backdropFilter: 'blur(8px)',
-        padding: '10px 20px calc(10px + env(safe-area-inset-bottom))',
+        borderRadius: 14,
+        padding: '8px 10px',
+        boxShadow: '0 2px 16px rgba(0,0,0,0.3)',
+        maxWidth: 150,
         textAlign: 'center',
       }}>
-        <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, margin: '0 0 4px' }}>
+        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, margin: '0 0 4px', lineHeight: 1.4 }}>
           不知道和朋友出门吃饭吃什么 试试这个吧
         </p>
-        <img src="/cfbxcx.png" alt="吃饭不想测" style={{ maxWidth: 90, borderRadius: 8, opacity: 0.45 }} />
+        <img src="/cfbxcx.png" alt="吃饭不想测" style={{ width: 60, borderRadius: 8, opacity: 0.55 }} />
       </div>
-      <div style={{ height: 90 }} />
     </div>
   )
 }
