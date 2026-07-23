@@ -29,7 +29,7 @@ export default function Home() {
         patternDensity={0.7}
         speed={0.3}
         edgeFade={0.6}
-        enableRipples={false}
+        enableRipples={true}
         style={{ position: 'absolute', inset: 0, zIndex: 0 }}
       />
 
@@ -48,7 +48,7 @@ export default function Home() {
         </div>
 
         <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.5px', color: '#111' }}>
-          音乐淘汰赛 <span style={{ background: '#ff6b35', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, verticalAlign: 'middle', fontWeight: 700 }}>v4.10</span>
+          音乐淘汰赛 <span style={{ background: '#ff6b35', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, verticalAlign: 'middle', fontWeight: 700 }}>v4.11</span>
         </h1>
         <p style={{ color: '#777', fontSize: 15, marginBottom: 28, lineHeight: 1.5 }}>
           搜索一位歌手，两两对决，选出你心中的最佳曲目

@@ -15,12 +15,12 @@ const CHAMP_W = 190
 const CHAMP_SIZE = 150
 
 // Vertical layout constants
-const V_W = 780; const VM = 28
-const V_CARD_W = 140; const V_CARD_GAP = 12
-const V_ROW_GAP = 4
-const V_ROUND_GAP = 18
+const V_W = 760; const VM = 26
+const V_CARD_W = 132; const V_CARD_GAP = 10
+const V_ROW_GAP = 3
+const V_ROUND_GAP = 14
 const V_CARDS_PER_ROW = 4
-const V_CARD_H = 36
+const V_CARD_H = 34
 
 function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   r = Math.min(r, w / 2, h / 2)
@@ -358,7 +358,7 @@ function drawHeader(ctx: CanvasRenderingContext2D, singerName: string, champion:
   ctx.font = `900 36px ${FONT}`; ctx.fillStyle = '#fff'
   ctx.fillText(`${singerName} · 歌曲淘汰赛`, W / 2, 40)
   ctx.font = `500 18px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.4)'
-  ctx.fillText(`${totalSongs} 首歌对决  ·  冠军 ${champion}`, W / 2, 72)
+  ctx.fillText(`冠军 ${champion}`, W / 2, 72)
   ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1.5
   ctx.beginPath(); ctx.moveTo(M, headerH - 8); ctx.lineTo(W - M, headerH - 8); ctx.stroke()
 }

@@ -88,9 +88,6 @@ export default function Result() {
               </h1>
               <div style={{ display: 'flex', gap: 20, marginTop: 8, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
-                  <strong style={{ color: accent, fontSize: 20 }}>{totalMatches}</strong> 组对决
-                </span>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
                   冠军 <strong style={{ color: '#ddd', fontSize: 20 }}>{champion}</strong>
                 </span>
                 {totalMin > 0 && (
