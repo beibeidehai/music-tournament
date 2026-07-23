@@ -8,6 +8,7 @@ interface Store extends GameState {
   setRounds: (rounds: Round[]) => void
   setRoundsAndSkip: (rounds: Round[], skipToRound: number) => void
   nextMatch: () => void
+  prevMatch: () => void
   setStage: (stage: GameStage) => void
   recordChoice: (roundIdx: number, matchIdx: number, choice: GameState['rounds'][0]['matches'][0]['choice'], decisionMs: number) => void
   reset: () => void
@@ -54,6 +55,17 @@ export const useStore = create<Store>()(
             return { currentRound: s.currentRound + 1, currentMatch: 0 }
           }
           return { currentRound: s.currentRound + 1, currentMatch: 0 }
+        }),
+
+      prevMatch: () =>
+        set((s) => {
+          if (s.currentMatch <= 0) return s
+          const rounds = [...s.rounds]
+          const round = { ...rounds[s.currentRound], matches: [...rounds[s.currentRound].matches] }
+          // clear the choice of the match we're going back to
+          round.matches[s.currentMatch - 1] = { ...round.matches[s.currentMatch - 1], choice: null, decisionMs: 0 }
+          rounds[s.currentRound] = round
+          return { rounds, currentMatch: s.currentMatch - 1 }
         }),
 
       setStage: (stage) => set({ stage }),

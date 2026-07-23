@@ -226,7 +226,7 @@ export default function Game() {
           }}>
             ← 首页
           </button>
-          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v4.12</span></span>
+          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v4.13</span></span>
         </div>
 
         <ProgressBar roundName={round.name} current={store.currentMatch} total={round.matches.length} />
@@ -316,6 +316,20 @@ export default function Game() {
               >
                 下一组 {match.choice ? '→' : '(请选择)'}
               </button>
+
+              {store.currentMatch > 0 && (
+                <button
+                  onClick={() => store.prevMatch()}
+                  style={{
+                    background: 'none', border: '1px solid #ddd',
+                    color: '#999', padding: '10px 32px', borderRadius: 24,
+                    cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                    marginTop: 10,
+                  }}
+                >
+                  ← 上一组
+                </button>
+              )}
 
               {!match.choice && (
                 <p style={{ color: '#aaa', fontSize: 13, marginTop: 8 }}>点击歌曲卡片选择，再点下一组</p>
