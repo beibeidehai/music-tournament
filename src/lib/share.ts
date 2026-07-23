@@ -368,7 +368,7 @@ async function drawFooter(ctx: CanvasRenderingContext2D, W: number, fy: number, 
   ctx.beginPath(); ctx.moveTo(M, fy); ctx.lineTo(W - M, fy); ctx.stroke()
   ctx.textAlign = 'left'
   ctx.font = `400 15px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.25)'
-  ctx.fillText('决战歌曲之巅 · echoesvs.site', M, fy + 34)
+  ctx.fillText('echoesvs.site', M, fy + 34)
 
   if (qrDataUrl) {
     const qrSize = 72
