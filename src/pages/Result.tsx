@@ -148,25 +148,20 @@ export default function Result() {
             再来一局
           </button>
         </div>
-      </div>
 
-      {/* Footer locked to bottom */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        background: 'rgba(11,11,19,0.92)',
-        backdropFilter: 'blur(8px)',
-        padding: '10px 20px calc(10px + env(safe-area-inset-bottom))',
-        textAlign: 'center',
-      }}>
-        <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, margin: '0 0 4px' }}>
-          不知道和朋友出门吃饭吃什么 试试这个吧
-        </p>
-        <img src="/cfbxcx.png" alt="吃饭不想测" style={{ maxWidth: 90, borderRadius: 8, opacity: 0.45 }} />
+        {/* Promo footer */}
+        <div style={{
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          marginTop: 40,
+          padding: '14px 20px 12px',
+          textAlign: 'center',
+        }}>
+          <p style={{ color: 'rgba(255,255,255,0.18)', fontSize: 11, margin: '0 0 4px' }}>
+            不知道和朋友出门吃饭吃什么 试试这个吧
+          </p>
+          <img src="/cfbxcx.png" alt="吃饭不想测" style={{ maxWidth: 80, borderRadius: 8, opacity: 0.4 }} />
+        </div>
       </div>
-
-      {/* Spacer */}
-      <div style={{ height: 90 }} />
     </div>
   )
 }

@@ -48,7 +48,7 @@ export default function Home() {
         </div>
 
         <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.5px', color: '#111' }}>
-          音乐淘汰赛 <span style={{ background: '#ff6b35', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, verticalAlign: 'middle', fontWeight: 700 }}>v4.13</span>
+          音乐淘汰赛 <span style={{ background: '#ff6b35', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, verticalAlign: 'middle', fontWeight: 700 }}>v4.15</span>
         </h1>
         <p style={{ color: '#777', fontSize: 15, marginBottom: 28, lineHeight: 1.5 }}>
           搜索一位歌手，两两对决，选出你心中的最佳曲目
@@ -115,13 +115,11 @@ export default function Home() {
         )}
       </div>
 
-      {/* Promo footer — locked to bottom */}
+      {/* Promo footer */}
       <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
         borderTop: '1px solid #e8e8e8',
-        background: 'rgba(255,255,255,0.92)',
-        backdropFilter: 'blur(8px)',
-        padding: '10px 20px calc(10px + env(safe-area-inset-bottom))',
+        marginTop: 60,
+        padding: '16px 20px calc(12px + env(safe-area-inset-bottom))',
         textAlign: 'center',
       }}>
         <p style={{ color: '#bbb', fontSize: 11, margin: '0 0 4px' }}>
@@ -129,8 +127,6 @@ export default function Home() {
         </p>
         <img src="/cfbxcx.png" alt="吃饭不想测" style={{ maxWidth: 90, borderRadius: 8, opacity: 0.55 }} />
       </div>
-
-      <div style={{ height: 90 }} />
     </div>
   )
 }

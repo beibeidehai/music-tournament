@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@neteasecloudmusicapienhanced/api": "^4.37.0",
+    "@vercel/analytics": "^2.0.1",
     "@vercel/node": "^5.8.26",
     "html2canvas": "^1.4.1",
     "postprocessing": "^6.39.3",

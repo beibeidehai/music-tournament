@@ -45,7 +45,8 @@
       "Bash(break)",
       "Skill(firecrawl-scrape)",
       "Bash(sed -i \"s/#f5a623/#000/g\" src/components/TrimRevive.tsx)",
-      "Bash(sed -i \"s/#f5a623/#ddd/g\" src/pages/Result.tsx)"
+      "Bash(sed -i \"s/#f5a623/#ddd/g\" src/pages/Result.tsx)",
+      "Bash(npm i *)"
     ]
   }
 }

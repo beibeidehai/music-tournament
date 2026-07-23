@@ -26,6 +26,10 @@ function buildRemainingRounds(pool: Song[], firstRound: Round): Round[] {
   return rounds
 }
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] }; return a
+}
+
 export default function Game() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -35,25 +39,48 @@ export default function Game() {
   const [loading, setLoading] = useState(true)
   const [matchStart, setMatchStart] = useState(0)
   const [error, setError] = useState('')
+  const [previewing, setPreviewing] = useState(false)
+  const [previewPool, setPreviewPool] = useState<Song[]>([])
+  const [fullSongs, setFullSongs] = useState<Song[]>([])
 
   useEffect(() => {
     if (store.rounds.length > 0) { setLoading(false); setMatchStart(Date.now()); return }
     if (!singerId) { navigate('/'); return }
     getSongs(singerId, singerName)
       .then((songs) => {
-        if (!getTournamentConfig(songs.length)) {
+        const config = getTournamentConfig(songs.length)
+        if (!config) {
           setError('该歌手歌曲太少（不足8首），请换一个歌手')
           setLoading(false)
           return
         }
-        const rounds = generateRounds(songs)
-        store.setSongs(songs)
-        store.setRounds(rounds)
-        setMatchStart(Date.now())
+        const shuffled = shuffle(songs)
+        const pool = shuffled.slice(0, config.pick)
+        setFullSongs(shuffled)
+        setPreviewPool(pool)
+        setPreviewing(true)
         setLoading(false)
       })
       .catch(() => { setError('加载歌曲失败，请重试'); setLoading(false) })
   }, [])
+
+  const replaceSong = (idx: number) => {
+    const used = new Set(previewPool.map(s => s.id))
+    const unused = fullSongs.filter(s => !used.has(s.id))
+    if (!unused.length) return
+    const replacement = unused[Math.floor(Math.random() * unused.length)]
+    const next = [...previewPool]
+    next[idx] = replacement
+    setPreviewPool(next)
+  }
+
+  const confirmPreview = () => {
+    const rounds = generateRounds(previewPool)
+    store.setSongs(previewPool)
+    store.setRounds(rounds)
+    setPreviewing(false)
+    setMatchStart(Date.now())
+  }
 
   // Round transition toast
   const [toast, setToast] = useState('')
@@ -85,6 +112,95 @@ export default function Game() {
       </button>
     </div>
   )
+
+  // Preview stage
+  if (previewing) {
+    const config = getTournamentConfig(previewPool.length)
+    const songsPerRow = 4
+    const rows = Math.ceil(previewPool.length / songsPerRow)
+    return (
+      <div style={{ minHeight: '100vh', background: '#fafafa', padding: '40px 20px 80px' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <button onClick={() => { setPreviewing(false); navigate('/') }} style={{ background: 'none', border: 'none', color: '#999', fontSize: 14, cursor: 'pointer' }}>
+              ← 返回
+            </button>
+            <span style={{ fontSize: 13, color: '#aaa' }}>{singerName} · 预览</span>
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 4px', color: '#111' }}>
+            {config?.rounds[0]} · 共 {previewPool.length} 首
+          </h2>
+          <p style={{ color: '#999', fontSize: 13, margin: '0 0 24px' }}>点击歌曲可替换，满意后开始对战</p>
+
+          {Array.from({ length: rows }, (_, row) => {
+            const rowSongs = previewPool.slice(row * songsPerRow, (row + 1) * songsPerRow)
+            return (
+              <div key={row} style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                {rowSongs.map((song, ci) => {
+                  const idx = row * songsPerRow + ci
+                  return (
+                    <div key={idx} style={{
+                      flex: 1, minWidth: 0,
+                      background: '#fff', borderRadius: 14, padding: 10,
+                      boxShadow: '0 1px 8px rgba(0,0,0,0.05)',
+                      cursor: 'pointer', transition: 'transform .15s',
+                    }}
+                      onClick={() => replaceSong(idx)}
+                      title="点击替换"
+                    >
+                      <div style={{
+                        width: '100%', aspectRatio: '1', borderRadius: 10,
+                        background: song.cover ? `url(${song.cover}) center/cover` : '#eee',
+                        marginBottom: 8,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#ccc', fontSize: 20,
+                      }}>
+                        {!song.cover && '♫'}
+                      </div>
+                      <p style={{
+                        margin: 0, fontSize: 12, fontWeight: 500, color: '#333',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        lineHeight: 1.3,
+                      }}>{idx + 1}. {song.name}</p>
+                      <p style={{
+                        margin: '2px 0 0', fontSize: 10, color: '#bbb',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>点击替换</p>
+                    </div>
+                  )
+                })}
+                {/* Fill empty slots */}
+                {rowSongs.length < songsPerRow && Array.from({ length: songsPerRow - rowSongs.length }, (_, fi) => (
+                  <div key={`empty-${fi}`} style={{ flex: 1, minWidth: 0 }} />
+                ))}
+              </div>
+            )
+          })}
+
+          <div style={{ textAlign: 'center', marginTop: 28 }}>
+            <button onClick={confirmPreview} style={{
+              background: 'linear-gradient(135deg, #000, #333)',
+              color: '#fff', border: 'none',
+              padding: '16px 60px', borderRadius: 28, fontSize: 17,
+              cursor: 'pointer', fontWeight: 700,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+            }}>
+              开始对战
+            </button>
+            <button onClick={() => {
+              const shuffled = shuffle(fullSongs)
+              setPreviewPool(shuffled.slice(0, previewPool.length))
+            }} style={{
+              background: 'none', border: 'none', color: '#999',
+              marginLeft: 14, cursor: 'pointer', fontSize: 13,
+            }}>
+              全部换一批
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Trim stage
   if (store.stage === 'trimming') {
@@ -226,7 +342,7 @@ export default function Game() {
           }}>
             ← 首页
           </button>
-          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v4.13</span></span>
+          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v4.15</span></span>
         </div>
 
         <ProgressBar roundName={round.name} current={store.currentMatch} total={round.matches.length} />
