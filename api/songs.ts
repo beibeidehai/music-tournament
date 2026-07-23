@@ -38,6 +38,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const allSongs: any[] = []
     const seen = new Set<number>()
 
+    function toSong(t: any) {
+      return {
+        id: String(t.trackId),
+        name: toSimplified(cleanName(t.trackName)),
+        artist: toSimplified(t.artistName || ''),
+        album: (t.collectionName || '').replace(/ - (Single|EP)$/i, ''),
+        year: t.releaseDate ? t.releaseDate.slice(0, 4) : '',
+        cover: (t.artworkUrl100 || '').replace('100x100bb', '300x300bb'),
+        platform: 'apple',
+        playUrl: t.previewUrl || '',
+        _artistId: t.artistId,
+      }
+    }
+
     // Search by name first (iTunes sorts by popularity) — primary source
     for (const store of ['cn', 'tw']) {
       if (name) {
@@ -50,16 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               if (isLive(t.trackName, t.collectionName || '')) continue
               if (JUNK.some(re => re.test(t.trackName))) continue
               seen.add(t.trackId)
-              allSongs.push({
-                id: String(t.trackId),
-                name: toSimplified(cleanName(t.trackName)),
-                artist: toSimplified(t.artistName || ''),
-                album: (t.collectionName || '').replace(/ - (Single|EP)$/i, ''),
-                year: t.releaseDate ? t.releaseDate.slice(0, 4) : '',
-                cover: (t.artworkUrl100 || '').replace('100x100bb', '300x300bb'),
-                platform: 'apple',
-                playUrl: t.previewUrl || '',
-              })
+              allSongs.push(toSong(t))
             }
           }
         } catch { /* continue */ }
@@ -78,16 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               if (isLive(t.trackName, t.collectionName || '')) continue
               if (JUNK.some(re => re.test(t.trackName))) continue
               seen.add(t.trackId)
-              allSongs.push({
-                id: String(t.trackId),
-                name: toSimplified(cleanName(t.trackName)),
-                artist: toSimplified(t.artistName || ''),
-                album: (t.collectionName || '').replace(/ - (Single|EP)$/i, ''),
-                year: t.releaseDate ? t.releaseDate.slice(0, 4) : '',
-                cover: (t.artworkUrl100 || '').replace('100x100bb', '300x300bb'),
-                platform: 'apple',
-                playUrl: t.previewUrl || '',
-              })
+              allSongs.push(toSong(t))
             }
           }
         } catch { /* continue */ }
@@ -106,11 +102,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       deduped.push(s)
     }
 
-    // Exclude compilation / various-artists junk (iTunes occasionally returns these)
-    const junkArtists = /^(various artists|various|compilation|karaoke|original soundtrack|群星|众艺人|合辑)$/i
-    const filtered = deduped.filter(s => !junkArtists.test(toSimplified(s.artist).trim()))
+    // Filter by artist ID (exact match) — prevents songs from other artists
+    let filtered = deduped
+    if (id) {
+      const targetId = Number(id)
+      if (!isNaN(targetId)) {
+        filtered = deduped.filter(s => s._artistId === targetId)
+      }
+    }
+    // Strip internal _artistId before sending
+    const clean = filtered.map(({ _artistId, ...rest }: any) => rest)
 
-    res.json(filtered.slice(0, 100))
+    res.json(clean.slice(0, 100))
   } catch (e: any) {
     res.status(500).json({ error: e.message || 'get songs failed' })
   }

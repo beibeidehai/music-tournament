@@ -4,7 +4,7 @@ import QRCode from 'qrcode'
 
 const SCALE = 2
 const FONT = '"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif'
-const GREEN = '#20b860'; const GREEN2 = '#189a4c'
+const GREEN = '#fff'; const GREEN2 = '#aaa'
 const DARK = '#0b0b13'
 
 // Horizontal layout constants
@@ -108,7 +108,7 @@ async function buildHorizontal(
   ctx.fillStyle = bgG; ctx.fillRect(0, 0, W, H)
 
   const gl = ctx.createRadialGradient(W / 2, headerH + bodyH / 2, 0, W / 2, headerH + bodyH / 2, 500)
-  gl.addColorStop(0, 'rgba(32,184,96,0.05)'); gl.addColorStop(1, 'transparent')
+  gl.addColorStop(0, 'rgba(255,255,255,0.05)'); gl.addColorStop(1, 'transparent')
   ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H)
 
   // Header
@@ -214,7 +214,7 @@ async function buildVertical(
   bgG.addColorStop(0, '#0c0c16'); bgG.addColorStop(1, DARK)
   ctx.fillStyle = bgG; ctx.fillRect(0, 0, W, H)
   const gl = ctx.createRadialGradient(W / 2, headerH + bodyH / 2, 0, W / 2, headerH + bodyH / 2, 500)
-  gl.addColorStop(0, 'rgba(32,184,96,0.05)'); gl.addColorStop(1, 'transparent')
+  gl.addColorStop(0, 'rgba(255,255,255,0.05)'); gl.addColorStop(1, 'transparent')
   ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H)
 
   drawHeader(ctx, singerName, champion, vertRounds[0].matches.length * 2, W, headerH)
@@ -390,7 +390,7 @@ function drawChampionCard(
   covers: Map<string, HTMLImageElement | null>,
 ) {
   ctx.save()
-  ctx.shadowColor = 'rgba(32,184,96,0.35)'; ctx.shadowBlur = 70; ctx.shadowOffsetY = 14
+  ctx.shadowColor = 'rgba(255,255,255,0.12)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 8
   rr(ctx, cX, cY, champSize, champSize, 22)
   ctx.fillStyle = '#111119'; ctx.fill()
   ctx.restore()
@@ -436,7 +436,7 @@ function drawSimpleChampion(
 ) {
   // Champion cover
   ctx.save()
-  ctx.shadowColor = 'rgba(32,184,96,0.35)'; ctx.shadowBlur = 70; ctx.shadowOffsetY = 14
+  ctx.shadowColor = 'rgba(255,255,255,0.12)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 8
   rr(ctx, x, y, size, size, 22)
   ctx.fillStyle = '#111119'; ctx.fill()
   ctx.restore()
@@ -488,7 +488,7 @@ function drawSingleSongCard(
   ctx.fill()
   ctx.strokeStyle = isWinner ? GREEN : 'rgba(255,255,255,0.04)'
   ctx.lineWidth = isWinner ? 2 : 1; rr(ctx, x, y, w, h, 9); ctx.stroke()
-  if (isWinner) { ctx.fillStyle = 'rgba(32,184,96,0.1)'; ctx.fillRect(x + 1, y + 1, w - 2, h - 2) }
+  if (isWinner) { ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(x + 1, y + 1, w - 2, h - 2) }
 
   const cover = covers.get(song.cover)
   if (cover) { ctx.save(); rr(ctx, x + 6, y + 6, cs, cs, 4); ctx.clip(); ctx.drawImage(cover, x + 6, y + 6, cs, cs); ctx.restore() }
@@ -585,7 +585,7 @@ function drawMatchCard(
   ctx.lineWidth = 1; rr(ctx, x, y, w, h, 9); ctx.stroke()
 
   // Song A
-  if (aW) { ctx.fillStyle = 'rgba(32,184,96,0.1)'; ctx.fillRect(x + 1, y + 1, w - 2, half - 2) }
+  if (aW) { ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(x + 1, y + 1, w - 2, half - 2) }
   const coverA = covers.get(m.songA.cover)
   if (coverA) { ctx.save(); rr(ctx, x + 4, y + 4, cs, cs, 4); ctx.clip(); ctx.drawImage(coverA, x + 4, y + 4, cs, cs); ctx.restore() }
   else { ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(x + 4, y + 4, cs, cs) }
@@ -599,7 +599,7 @@ function drawMatchCard(
   ctx.moveTo(x + 5, y + half); ctx.lineTo(x + w - 5, y + half); ctx.stroke()
 
   // Song B
-  if (bW) { ctx.fillStyle = 'rgba(32,184,96,0.1)'; ctx.fillRect(x + 1, y + half + 1, w - 2, half - 2) }
+  if (bW) { ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(x + 1, y + half + 1, w - 2, half - 2) }
   const coverB = covers.get(m.songB.cover)
   if (coverB) { ctx.save(); rr(ctx, x + 4, y + half + 4, cs, cs, 4); ctx.clip(); ctx.drawImage(coverB, x + 4, y + half + 4, cs, cs); ctx.restore() }
   else { ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(x + 4, y + half + 4, cs, cs) }

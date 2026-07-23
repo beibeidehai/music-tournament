@@ -6,7 +6,7 @@ interface Props {
   onSelect: (singer: Singer) => void
 }
 
-const accent = '#20b860'
+const accent = '#000'
 
 export default function SearchBox({ onSelect }: Props) {
   const [query, setQuery] = useState('')
@@ -50,7 +50,7 @@ export default function SearchBox({ onSelect }: Props) {
         border: `2px solid ${borderColor}`, borderRadius: 16,
         background: '#fff', padding: '4px 4px 4px 20px',
         transition: 'border-color 0.2s ease',
-        boxShadow: focused ? '0 4px 20px rgba(32,184,96,0.1)' : '0 2px 8px rgba(0,0,0,0.04)',
+        boxShadow: focused ? '0 4px 20px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.04)',
       }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2.5" strokeLinecap="round">
           <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
@@ -96,7 +96,7 @@ export default function SearchBox({ onSelect }: Props) {
                 width: 48, height: 48, borderRadius: '50%',
                 background: s.avatar
                   ? `url(${s.avatar}) center/cover`
-                  : `linear-gradient(135deg, ${accent}, #189a4c)`,
+                  : `linear-gradient(135deg, ${accent}, #333)`,
                 flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: '#fff', fontSize: 18, fontWeight: 700,
               }}>{!s.avatar && s.name[0]}</div>

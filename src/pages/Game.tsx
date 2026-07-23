@@ -80,7 +80,7 @@ export default function Game() {
   if (error) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 16 }}>
       <p style={{ color: '#666', fontSize: 16 }}>{error}</p>
-      <button onClick={() => navigate('/')} style={{ background: '#20b860', color: '#fff', border: 'none', padding: '12px 36px', borderRadius: 24, cursor: 'pointer', fontSize: 15, fontWeight: 600 }}>
+      <button onClick={() => navigate('/')} style={{ background: '#000', color: '#fff', border: 'none', padding: '12px 36px', borderRadius: 24, cursor: 'pointer', fontSize: 15, fontWeight: 600 }}>
         返回首页
       </button>
     </div>
@@ -209,10 +209,10 @@ export default function Game() {
         <div style={{
           position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
           zIndex: 1000,
-          background: 'linear-gradient(135deg, #20b860, #189a4c)',
+          background: 'linear-gradient(135deg, #000, #333)',
           color: '#fff', padding: '12px 32px', borderRadius: 28,
           fontSize: 16, fontWeight: 700,
-          boxShadow: '0 4px 24px rgba(32,184,96,0.35)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
           animation: 'toastIn 0.3s ease',
         }}>
           {toast}
@@ -226,7 +226,7 @@ export default function Game() {
           }}>
             ← 首页
           </button>
-          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v4.5</span></span>
+          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v4.6</span></span>
         </div>
 
         <ProgressBar roundName={round.name} current={store.currentMatch} total={round.matches.length} />
@@ -244,7 +244,7 @@ export default function Game() {
               }
               setMatchStart(Date.now())
             }}
-              style={{ background: '#20b860', color: '#fff', border: 'none', padding: '12px 40px', borderRadius: 24, cursor: 'pointer', fontSize: 16, fontWeight: 600 }}>
+              style={{ background: '#000', color: '#fff', border: 'none', padding: '12px 40px', borderRadius: 24, cursor: 'pointer', fontSize: 16, fontWeight: 600 }}>
               继续
             </button>
           </div>
@@ -289,7 +289,7 @@ export default function Game() {
                   <button
                     onClick={() => setChoice(match.choice === 'both' ? null as any : 'both')}
                     style={{
-                      background: match.choice === 'both' ? '#20b860' : '#fff',
+                      background: match.choice === 'both' ? '#000' : '#fff',
                       color: match.choice === 'both' ? '#fff' : '#666',
                       border: match.choice === 'both' ? 'none' : '1px solid #ddd',
                       padding: '10px 28px', borderRadius: 24,
@@ -306,11 +306,11 @@ export default function Game() {
                 onClick={() => match.choice && commitAndAdvance(match.choice)}
                 disabled={!match.choice}
                 style={{
-                  background: match.choice ? 'linear-gradient(135deg, #20b860, #189a4c)' : '#e0e0e0',
+                  background: match.choice ? 'linear-gradient(135deg, #000, #333)' : '#e0e0e0',
                   color: '#fff', border: 'none',
                   padding: '14px 48px', borderRadius: 28, cursor: match.choice ? 'pointer' : 'not-allowed',
                   fontSize: 16, fontWeight: 700,
-                  boxShadow: match.choice ? '0 4px 20px rgba(32,184,96,0.3)' : 'none',
+                  boxShadow: match.choice ? '0 4px 20px rgba(0,0,0,0.3)' : 'none',
                   transition: 'all 0.2s ease',
                 }}
               >

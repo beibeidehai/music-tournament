@@ -40,7 +40,7 @@ export default function TrimRevive({ mode, candidates, target, onConfirm }: Prop
         <div style={{ height: 4, background: '#eee', borderRadius: 2, marginBottom: 20 }}>
           <div style={{
             width: `${(current / target) * 100}%`, height: '100%',
-            background: isOk ? '#20b860' : '#f5a623',
+            background: isOk ? '#000' : '#000',
             borderRadius: 2, transition: 'width 0.3s ease',
           }} />
         </div>
@@ -58,7 +58,7 @@ export default function TrimRevive({ mode, candidates, target, onConfirm }: Prop
                   padding: '12px 16px', margin: '4px 0', borderRadius: 14,
                   cursor: 'pointer',
                   background: isChecked ? '#fff9e6' : '#fff',
-                  border: isChecked ? '1px solid #f5a623' : '1px solid transparent',
+                  border: isChecked ? '1px solid #000' : '1px solid transparent',
                   boxShadow: isChecked ? '0 2px 8px rgba(245,166,35,0.15)' : '0 1px 3px rgba(0,0,0,0.04)',
                   transition: 'all 0.2s ease',
                 }}
@@ -66,7 +66,7 @@ export default function TrimRevive({ mode, candidates, target, onConfirm }: Prop
                 <div style={{
                   width: 22, height: 22, borderRadius: 6,
                   border: isChecked ? 'none' : '2px solid #ddd',
-                  background: isChecked ? '#f5a623' : '#fff',
+                  background: isChecked ? '#000' : '#fff',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0, transition: 'all 0.2s ease',
                 }}>
@@ -91,11 +91,11 @@ export default function TrimRevive({ mode, candidates, target, onConfirm }: Prop
           disabled={!isOk}
           style={{
             width: '100%', padding: 16, marginTop: 24,
-            background: isOk ? 'linear-gradient(135deg, #20b860, #189a4c)' : '#ddd',
+            background: isOk ? 'linear-gradient(135deg, #000, #333)' : '#ddd',
             color: '#fff', border: 'none', borderRadius: 16, fontSize: 17,
             cursor: isOk ? 'pointer' : 'not-allowed',
             fontWeight: 700,
-            boxShadow: isOk ? '0 4px 16px rgba(32,184,96,0.25)' : 'none',
+            boxShadow: isOk ? '0 4px 16px rgba(0,0,0,0.25)' : 'none',
             transition: 'all 0.2s ease',
           }}
         >

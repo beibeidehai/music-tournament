@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store'
 import BracketTree from '../components/BracketTree'
 
-const accent = '#20b860'
+const accent = '#fff'
 
 export default function Result() {
   const navigate = useNavigate()
@@ -72,8 +72,8 @@ export default function Result() {
               width: 76, height: 76, borderRadius: '50%',
               background: singer.avatar
                 ? `url(${singer.avatar}) center/cover`
-                : `linear-gradient(135deg, ${accent}, #189a4c)`,
-              boxShadow: `0 4px 24px rgba(32,184,96,0.25)`,
+                : `linear-gradient(135deg, ${accent}, #aaa)`,
+              boxShadow: `0 4px 24px rgba(255,255,255,0.25)`,
               flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontSize: 30, fontWeight: 700,
@@ -91,7 +91,7 @@ export default function Result() {
                   <strong style={{ color: accent, fontSize: 20 }}>{totalMatches}</strong> 组对决
                 </span>
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
-                  冠军 <strong style={{ color: '#f5a623', fontSize: 20 }}>{champion}</strong>
+                  冠军 <strong style={{ color: '#ddd', fontSize: 20 }}>{champion}</strong>
                 </span>
                 {totalMin > 0 && (
                   <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
@@ -115,11 +115,11 @@ export default function Result() {
               style={{
                 background: exporting
                   ? 'rgba(255,255,255,0.1)'
-                  : `linear-gradient(135deg, ${accent}, #189a4c)`,
+                  : `linear-gradient(135deg, ${accent}, #aaa)`,
                 color: '#fff', border: 'none',
                 padding: '14px 36px', borderRadius: 28, fontSize: 15,
                 cursor: exporting ? 'not-allowed' : 'pointer', fontWeight: 700,
-                boxShadow: exporting ? 'none' : `0 4px 24px rgba(32,184,96,0.3)`,
+                boxShadow: exporting ? 'none' : `0 4px 24px rgba(255,255,255,0.3)`,
               }}
             >
               {exporting ? '生成中...' : '导出横版'}

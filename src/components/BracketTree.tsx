@@ -5,7 +5,7 @@ interface Props {
   champion: string
 }
 
-const accent = '#20b860'
+const accent = '#fff'
 
 const STYLE = `
 @keyframes star-move-top {
@@ -54,14 +54,14 @@ export default function BracketTree({ rounds, champion }: Props) {
             <div style={{
               position: 'absolute', width: '300%', height: '50%',
               opacity: 0.7, top: -10, left: '-250%', borderRadius: '50%',
-              background: `linear-gradient(90deg, transparent, ${accent}, #f5a623, ${accent}, transparent)`,
+              background: `linear-gradient(90deg, transparent, ${accent}, #888, ${accent}, transparent)`,
               animation: 'star-move-top 3s linear infinite alternate',
               zIndex: 0,
             }} />
             <div style={{
               position: 'absolute', width: '300%', height: '50%',
               opacity: 0.7, bottom: -10, right: '-250%', borderRadius: '50%',
-              background: `linear-gradient(90deg, transparent, ${accent}, #f5a623, ${accent}, transparent)`,
+              background: `linear-gradient(90deg, transparent, ${accent}, #888, ${accent}, transparent)`,
               animation: 'star-move-bottom 3s linear infinite alternate',
               zIndex: 0,
             }} />

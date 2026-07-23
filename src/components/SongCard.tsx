@@ -26,10 +26,10 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
     play(song.playUrl, song.id)
   }
 
-  const borderColor = selected ? '#20b860' : '#e8e8e8'
+  const borderColor = selected ? '#000' : '#e8e8e8'
   const bg = selected ? '#f0fdf4' : '#fff'
   const shadow = selected
-    ? '0 4px 24px rgba(32,184,96,0.15)'
+    ? '0 4px 24px rgba(0,0,0,0.15)'
     : '0 2px 12px rgba(0,0,0,0.06)'
 
   return (
@@ -53,11 +53,11 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
         {selected && (
           <div style={{
             position: 'absolute', top: 10, right: 10,
-            background: '#20b860', color: '#fff',
+            background: '#000', color: '#fff',
             width: 32, height: 32, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16, fontWeight: 700,
-            boxShadow: '0 2px 8px rgba(32,184,96,0.4)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
           }}>✓</div>
         )}
       </div>
@@ -79,7 +79,7 @@ export default function SongCard({ song, selected, onClick, canBoth }: Props) {
           disabled={!song.playUrl}
           style={{
             marginTop: 12, border: 'none',
-            background: playing ? '#e74c3c' : '#20b860',
+            background: playing ? '#e74c3c' : '#000',
             color: '#fff', borderRadius: 24,
             padding: '8px 28px', cursor: song.playUrl ? 'pointer' : 'default',
             fontSize: 13, fontWeight: 600,

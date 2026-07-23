@@ -3,7 +3,7 @@ import { useStore } from '../store'
 import SearchBox from '../components/SearchBox'
 import type { Singer } from '../types'
 
-const accent = '#20b860'
+const accent = '#000'
 const cardBg = '#fafafa'
 
 export default function Home() {
@@ -21,15 +21,15 @@ export default function Home() {
         {/* Logo area */}
         <div style={{
           width: 72, height: 72, borderRadius: 18, margin: '0 auto 24px',
-          background: `linear-gradient(135deg, ${accent}, #189a4c)`,
+          background: `linear-gradient(135deg, ${accent}, #333)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 32, boxShadow: `0 8px 32px rgba(32,184,96,0.25)`,
+          fontSize: 32, boxShadow: `0 8px 32px rgba(0,0,0,0.25)`,
         }}>
           ♫
         </div>
 
         <h1 style={{ fontSize: 36, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.5px', color: '#111' }}>
-          音乐淘汰赛 <span style={{ background: '#ff6b35', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, verticalAlign: 'middle', fontWeight: 700 }}>v4.5</span>
+          音乐淘汰赛 <span style={{ background: '#ff6b35', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, verticalAlign: 'middle', fontWeight: 700 }}>v4.6</span>
         </h1>
         <p style={{ color: '#777', fontSize: 16, marginBottom: 40, lineHeight: 1.6 }}>
           搜索一位歌手，两两对决，选出你心中的最佳曲目
@@ -48,7 +48,7 @@ export default function Home() {
                 width: 100, height: 100, borderRadius: '50%',
                 background: singer.avatar
                   ? `url(${singer.avatar}) center/cover`
-                  : `linear-gradient(135deg, ${accent}, #189a4c)`,
+                  : `linear-gradient(135deg, ${accent}, #333)`,
                 margin: '0 auto 16px',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -71,12 +71,12 @@ export default function Home() {
               <button
                 onClick={() => navigate(`/game?singer=${encodeURIComponent(singer.id)}&name=${encodeURIComponent(singer.name)}`)}
                 style={{
-                  background: `linear-gradient(135deg, ${accent}, #189a4c)`,
+                  background: `linear-gradient(135deg, ${accent}, #333)`,
                   color: '#fff', border: 'none',
                   padding: '16px 0', borderRadius: 16, fontSize: 18,
                   cursor: 'pointer', width: '100%', fontWeight: 700,
                   marginTop: 24,
-                  boxShadow: `0 4px 16px rgba(32,184,96,0.25)`,
+                  boxShadow: `0 4px 16px rgba(0,0,0,0.25)`,
                   transition: 'all 0.2s ease',
                 }}
               >

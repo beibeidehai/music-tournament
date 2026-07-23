@@ -42,7 +42,10 @@
       "Bash(git reset *)",
       "Bash(rm -f test_bracket2.ts)",
       "WebFetch(domain:musiccup.app)",
-      "Bash(break)"
+      "Bash(break)",
+      "Skill(firecrawl-scrape)",
+      "Bash(sed -i \"s/#f5a623/#000/g\" src/components/TrimRevive.tsx)",
+      "Bash(sed -i \"s/#f5a623/#ddd/g\" src/pages/Result.tsx)"
     ]
   }
 }
