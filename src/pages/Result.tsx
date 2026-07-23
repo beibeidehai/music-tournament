@@ -158,10 +158,10 @@ export default function Result() {
             paddingTop: 16,
             textAlign: 'center',
           }}>
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, margin: '0 0 12px' }}>
+            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, margin: '0 0 6px' }}>
               不知道和朋友出门吃饭吃什么 试试这个吧
             </p>
-            <img src="/cfbxcx.png" alt="吃饭不想测" style={{ maxWidth: 200, borderRadius: 12 }} />
+            <img src="/cfbxcx.png" alt="吃饭不想测" style={{ maxWidth: 110, borderRadius: 10, opacity: 0.5 }} />
           </div>
         </div>
       </div>

@@ -93,7 +93,7 @@ export default function Game() {
       <TrimRevive
         mode="trim"
         candidates={allSelected}
-        target={32}
+        target={store.rounds[0].matches.length}
         onConfirm={(kept) => {
           const newFirstRound: Round = {
             ...store.rounds[0],
@@ -119,7 +119,7 @@ export default function Game() {
   if (store.stage === 'reviving') {
     const eliminated = getEliminatedSongs(store.rounds[0])
     const selected = getSelectedSongs(store.rounds[0])
-    const need = 32 - selected.length
+    const need = store.rounds[0].matches.length - selected.length
     return (
       <TrimRevive
         mode="revive"
@@ -226,7 +226,7 @@ export default function Game() {
           }}>
             ← 首页
           </button>
-          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v4.6</span></span>
+          <span style={{ fontSize: 12, color: '#bbb' }}>{store.singer?.name} · <span style={{ color: '#ff6b35' }}>v4.7</span></span>
         </div>
 
         <ProgressBar roundName={round.name} current={store.currentMatch} total={round.matches.length} />
