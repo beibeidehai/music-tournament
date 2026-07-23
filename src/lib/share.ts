@@ -15,11 +15,12 @@ const CHAMP_W = 190
 const CHAMP_SIZE = 150
 
 // Vertical layout constants
-const V_W = 780; const VM = 30
-const V_CARD_W = 156; const V_CARD_GAP = 16
-const V_ROW_GAP = 6
-const V_ROUND_GAP = 32
+const V_W = 780; const VM = 28
+const V_CARD_W = 140; const V_CARD_GAP = 12
+const V_ROW_GAP = 4
+const V_ROUND_GAP = 18
 const V_CARDS_PER_ROW = 4
+const V_CARD_H = 36
 
 function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   r = Math.min(r, w / 2, h / 2)
@@ -188,7 +189,7 @@ async function buildVertical(
   const headerH = 110; const footerH = 100
   const W = V_W
   const availW = W - VM * 2
-  const cardH = CARD_H
+  const cardH = V_CARD_H
 
   // Compute top half height (same for bottom half)
   let topH = 0
