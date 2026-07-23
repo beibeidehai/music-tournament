@@ -29,7 +29,7 @@ export default function Home() {
         </div>
 
         <h1 style={{ fontSize: 36, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.5px', color: '#111' }}>
-          音乐淘汰赛 <span style={{ background: '#ff6b35', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, verticalAlign: 'middle', fontWeight: 700 }}>v4.2 — 点击选歌·按钮推进</span>
+          音乐淘汰赛 <span style={{ background: '#ff6b35', color: '#fff', fontSize: 10, padding: '2px 8px', borderRadius: 4, verticalAlign: 'middle', fontWeight: 700 }}>v4.4</span>
         </h1>
         <p style={{ color: '#777', fontSize: 16, marginBottom: 40, lineHeight: 1.6 }}>
           搜索一位歌手，两两对决，选出你心中的最佳曲目
@@ -95,6 +95,19 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* Footer */}
+        <div style={{
+          borderTop: '1px solid #e8e8e8',
+          marginTop: 52,
+          paddingTop: 20,
+          textAlign: 'center',
+        }}>
+          <p style={{ color: '#999', fontSize: 13, margin: '0 0 12px' }}>
+            不知道和朋友出门吃饭吃什么 试试这个吧
+          </p>
+          <img src="/cfbxcx.png" alt="吃饭不想测" style={{ maxWidth: 200, borderRadius: 12 }} />
+        </div>
       </div>
     </div>
   )

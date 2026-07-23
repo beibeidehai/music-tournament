@@ -150,6 +150,19 @@ export default function Result() {
           >
             再来一局
           </button>
+
+          {/* Footer */}
+          <div style={{
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            marginTop: 32,
+            paddingTop: 16,
+            textAlign: 'center',
+          }}>
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, margin: '0 0 12px' }}>
+              不知道和朋友出门吃饭吃什么 试试这个吧
+            </p>
+            <img src="/cfbxcx.png" alt="吃饭不想测" style={{ maxWidth: 200, borderRadius: 12 }} />
+          </div>
         </div>
       </div>
     </div>

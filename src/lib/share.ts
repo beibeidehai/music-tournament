@@ -174,7 +174,7 @@ async function buildHorizontal(
   return new Promise<Blob>(res => cv.toBlob(b => res(b!), 'image/jpeg', 0.92))
 }
 
-// ========== Vertical (32-song) layout: top/bottom halves → center champion ==========
+// ========== Vertical layout: top half ↓ champion ↓ bottom half ==========
 
 async function buildVertical(
   singerName: string, visible: Round[], champion: string,
@@ -190,15 +190,18 @@ async function buildVertical(
   const availW = W - VM * 2
   const cardH = CARD_H
 
-  // Height: top half + champion + bottom half
+  // Compute top half height (same for bottom half)
   let topH = 0
   for (const r of bracketRounds) {
     const leftCount = Math.ceil(r.matches.length / 2)
     const rows = Math.ceil(leftCount / V_CARDS_PER_ROW)
-    topH += rows * (cardH + V_ROW_GAP) + 28 // 28 for label
+    topH += rows * (cardH + V_ROW_GAP) + 28
   }
-  const champH = CHAMP_SIZE + 110 // card + crown + label + name
-  const bodyH = topH + champH + topH // top + champ + bottom (symmetrical)
+  // Final section: song A card + champion + song B card
+  const finalGap = 20
+  const champCardH = CHAMP_SIZE + 80
+  const finalH = 8 + cardH + finalGap + champCardH + finalGap + cardH + 12
+  const bodyH = topH + finalH + topH
   const H = headerH + bodyH + footerH
 
   const cv = document.createElement('canvas')
@@ -216,11 +219,10 @@ async function buildVertical(
 
   drawHeader(ctx, singerName, champion, vertRounds[0].matches.length * 2, W, headerH)
 
-  // Track positions: [roundIdx][matchIdx]
   const topPos: (Pos | null)[][] = []
   const botPos: (Pos | null)[][] = []
 
-  // --- Draw top half (left-half matches, flowing downward) ---
+  // --- Top half: 32→16, 16→8, 8→4, 4→2 (top to bottom) ---
   let curY = headerH + 8
   bracketRounds.forEach((round, ri) => {
     const mid = Math.ceil(round.matches.length / 2)
@@ -257,39 +259,72 @@ async function buildVertical(
     }
   }
 
-  // --- Draw bottom half (right-half matches, flowing upward) ---
-  const bottomStartY = H - footerH - 8
-  let curY2 = bottomStartY
-  // Build bottom rounds in reverse: draw from bottom upward
-  const revBracket = [...bracketRounds].reverse()
-  revBracket.forEach((round, revIdx) => {
-    const ri = bracketRounds.length - 1 - revIdx
+  // --- Final match section: Song A → Champion ← Song B ---
+  const finalMatch = finalRound.matches[0]
+  const lastTop = topPos[nBracket - 1]?.[0]
+  const finalCenterX = W / 2
+  let finalY = curY + 8
+
+  // Song A card (top half winner)
+  let songAPos: Pos | null = null
+  if (finalMatch) {
+    const aX = (W - V_CARD_W) / 2
+    const aWinner = finalMatch.choice === 'a'
+    drawSingleSongCard(ctx, finalMatch.songA, aWinner, aX, finalY, V_CARD_W, cardH, covers)
+    songAPos = { x: aX, y: finalY, w: V_CARD_W, h: cardH, midY: finalY + cardH / 2 }
+    if (lastTop) drawVLine(ctx, lastTop.x + lastTop.w / 2, lastTop.y + lastTop.h, finalCenterX, finalY)
+    finalY += cardH + finalGap
+  }
+
+  // Champion card
+  const cX = (W - CHAMP_SIZE) / 2
+  if (finalMatch && songAPos) {
+    drawVLine(ctx, finalCenterX, songAPos.y + songAPos.h, cX + CHAMP_SIZE / 2, finalY)
+  }
+  drawSimpleChampion(ctx, champion, finalMatch, cX, finalY, CHAMP_SIZE, covers, W)
+  const champBottomY = finalY + champCardH
+  finalY += champCardH + finalGap
+
+  // Song B card (bottom half winner)
+  let songBPos: Pos | null = null
+  if (finalMatch) {
+    const bX = (W - V_CARD_W) / 2
+    const bWinner = finalMatch.choice === 'b'
+    drawSingleSongCard(ctx, finalMatch.songB, bWinner, bX, finalY, V_CARD_W, cardH, covers)
+    songBPos = { x: bX, y: finalY, w: V_CARD_W, h: cardH, midY: finalY + cardH / 2 }
+    drawVLine(ctx, cX + CHAMP_SIZE / 2, champBottomY, finalCenterX, finalY)
+    finalY += cardH
+  }
+
+  // --- Bottom half: 4→2, 8→4, 16→8, 32→16 (top to bottom) ---
+  finalY += 12
+  // Draw in display order: ri = nBracket-1 first (4→2, nearest champion), down to ri = 0 (32→16, at bottom)
+  for (let di = 0; di < nBracket; di++) {
+    const ri = nBracket - 1 - di
+    const round = bracketRounds[ri]
     const mid = Math.ceil(round.matches.length / 2)
     const rightHalf = round.matches.slice(mid)
     botPos[ri] = []
 
-    // Compute this round's height from bottom
-    const nRows = Math.ceil(rightHalf.length / V_CARDS_PER_ROW)
-    const roundH = nRows * (cardH + V_ROW_GAP) + 26 // 26 for label
-    curY2 -= roundH
-
     ctx.textAlign = 'center'
     ctx.font = `700 12px ${FONT}`; ctx.fillStyle = GREEN
-    ctx.fillText(round.name + ' (下半区)', W / 2, curY2 + 14)
-    const rowStartY = curY2 + 26
+    ctx.fillText(round.name + ' (下半区)', W / 2, finalY + 14)
+    finalY += 26
 
+    const nRows = Math.ceil(rightHalf.length / V_CARDS_PER_ROW)
     for (let row = 0; row < nRows; row++) {
       const rowMatches = rightHalf.slice(row * V_CARDS_PER_ROW, (row + 1) * V_CARDS_PER_ROW)
       const rowW = rowMatches.length * V_CARD_W + (rowMatches.length - 1) * V_CARD_GAP
       const sx = VM + (availW - rowW) / 2
-      const y = rowStartY + row * (cardH + V_ROW_GAP)
       rowMatches.forEach((m, ci) => {
         const x = sx + ci * (V_CARD_W + V_CARD_GAP)
-        drawMatchCard(ctx, m, x, y, V_CARD_W, cardH, covers)
-        botPos[ri][row * V_CARDS_PER_ROW + ci] = { x, y, w: V_CARD_W, h: cardH, midY: y + cardH / 2 }
+        drawMatchCard(ctx, m, x, finalY, V_CARD_W, cardH, covers)
+        botPos[ri][row * V_CARDS_PER_ROW + ci] = { x, y: finalY, w: V_CARD_W, h: cardH, midY: finalY + cardH / 2 }
       })
+      finalY += cardH + V_ROW_GAP
     }
-  })
+    finalY += V_ROUND_GAP - V_ROW_GAP
+  }
 
   // Bottom bracket lines (upward)
   for (let ri = 0; ri < nBracket - 1; ri++) {
@@ -297,22 +332,14 @@ async function buildVertical(
     for (let mi = 0; mi < cur.length; mi++) {
       const pos = cur[mi]; if (!pos) continue
       const parent = botPos[ri + 1]?.[Math.floor(mi / 2)]; if (!parent) continue
-      drawVLine(ctx, pos.x + pos.w / 2, pos.y, parent.x + parent.w / 2, parent.y + parent.h)
+      drawVLine(ctx, pos.x + pos.w / 2, pos.y + pos.h, parent.x + parent.w / 2, parent.y)
     }
   }
 
-  // --- Champion card in center ---
-  if (nBracket > 0 && finalRound.matches[0]) {
-    const finalMatch = finalRound.matches[0]
-    const lastTop = topPos[nBracket - 1]?.[0]
-    const lastBot = botPos[nBracket - 1]?.[0]
-    const cX = (W - CHAMP_SIZE) / 2
-    const cY = headerH + topH + 4
-
-    if (lastTop) drawVLine(ctx, lastTop.x + lastTop.w / 2, lastTop.y + lastTop.h, cX + CHAMP_SIZE / 2, cY)
-    if (lastBot) drawVLine(ctx, lastBot.x + lastBot.w / 2, lastBot.y, cX + CHAMP_SIZE / 2, cY + CHAMP_SIZE)
-
-    drawChampionCard(ctx, finalMatch, champion, cX, cY, W, CHAMP_SIZE, cX + CHAMP_SIZE / 2, covers)
+  // Bottom 4→2 → Song B line
+  const lastBot = botPos[nBracket - 1]?.[0]
+  if (lastBot && songBPos) {
+    drawVLine(ctx, finalCenterX, songBPos.y + songBPos.h, lastBot.x + lastBot.w / 2, lastBot.y)
   }
 
   // Footer + QR
@@ -399,6 +426,79 @@ function drawChampionCard(
   ctx.fillText(champion, cX + champSize / 2, ly + 18)
 }
 
+function drawSimpleChampion(
+  ctx: CanvasRenderingContext2D,
+  champion: string,
+  finalMatch: Round['matches'][0] | undefined,
+  x: number, y: number, size: number,
+  covers: Map<string, HTMLImageElement | null>,
+  _W: number,
+) {
+  // Champion cover
+  ctx.save()
+  ctx.shadowColor = 'rgba(29,185,84,0.35)'; ctx.shadowBlur = 70; ctx.shadowOffsetY = 14
+  rr(ctx, x, y, size, size, 22)
+  ctx.fillStyle = '#111119'; ctx.fill()
+  ctx.restore()
+
+  const champSong = finalMatch?.choice === 'a' ? finalMatch.songA : finalMatch?.songB
+  if (champSong) {
+    const champImg = covers.get(champSong.cover)
+    if (champImg) { ctx.save(); rr(ctx, x, y, size, size, 22); ctx.clip(); ctx.drawImage(champImg, x, y, size, size); ctx.restore() }
+  }
+
+  rr(ctx, x, y, size, size, 22)
+  ctx.strokeStyle = GREEN; ctx.lineWidth = 5; ctx.stroke()
+
+  // Crown
+  ctx.save()
+  ctx.translate(x + size, y - 6)
+  ctx.rotate(0.3)
+  ctx.font = '64px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+  ctx.fillStyle = '#fff'
+  ctx.fillText('👑', 0, 0)
+  ctx.restore()
+
+  // Label + name below the card
+  let ly = y + size + 16
+  ctx.textAlign = 'center'
+  const lbl = '🏆 冠军'
+  const lw = ctx.measureText(lbl).width + 40
+  const lblX = x + size / 2 - lw / 2
+  rr(ctx, lblX, ly, lw, 38, 19)
+  ctx.fillStyle = grd(ctx, lblX, ly, lblX + lw, ly)
+  ctx.fill()
+  ctx.font = `700 16px ${FONT}`; ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'
+  ctx.fillText(lbl, x + size / 2, ly + 19)
+  ly += 38 + 8
+  ctx.font = `900 28px ${FONT}`; ctx.fillStyle = '#fff'
+  ctx.fillText(champion, x + size / 2, ly + 18)
+}
+
+function drawSingleSongCard(
+  ctx: CanvasRenderingContext2D,
+  song: Song,
+  isWinner: boolean,
+  x: number, y: number, w: number, h: number,
+  covers: Map<string, HTMLImageElement | null>,
+) {
+  const cs = h - 12
+  rr(ctx, x, y, w, h, 9)
+  ctx.fillStyle = isWinner ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)'
+  ctx.fill()
+  ctx.strokeStyle = isWinner ? GREEN : 'rgba(255,255,255,0.04)'
+  ctx.lineWidth = isWinner ? 2 : 1; rr(ctx, x, y, w, h, 9); ctx.stroke()
+  if (isWinner) { ctx.fillStyle = 'rgba(29,185,84,0.1)'; ctx.fillRect(x + 1, y + 1, w - 2, h - 2) }
+
+  const cover = covers.get(song.cover)
+  if (cover) { ctx.save(); rr(ctx, x + 6, y + 6, cs, cs, 4); ctx.clip(); ctx.drawImage(cover, x + 6, y + 6, cs, cs); ctx.restore() }
+  else { ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(x + 6, y + 6, cs, cs) }
+
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle'
+  ctx.font = `${isWinner ? 700 : 400} 10px ${FONT}`
+  ctx.fillStyle = isWinner ? '#fff' : 'rgba(255,255,255,0.28)'
+  ctx.fillText(fit(ctx, song.name, w - cs - 20), x + cs + 12, y + h / 2 + 1)
+}
 function grd(ctx: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number) {
   const g = ctx.createLinearGradient(x0, y0, x1, y1)
   g.addColorStop(0, GREEN); g.addColorStop(1, GREEN2); return g
@@ -428,9 +528,10 @@ function drawHLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: nu
 function drawVLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
   const dy = Math.abs(y2 - y1)
   const cp = dy * 0.4
+  const sign = y2 > y1 ? 1 : -1
   ctx.beginPath()
   ctx.moveTo(x1, y1)
-  ctx.bezierCurveTo(x1, y1 + cp, x2, y2 - cp, x2, y2)
+  ctx.bezierCurveTo(x1, y1 + cp * sign, x2, y2 - cp * sign, x2, y2)
   ctx.strokeStyle = 'rgba(255,255,255,0.1)'
   ctx.stroke()
 }

@@ -106,7 +106,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       deduped.push(s)
     }
 
-    res.json(deduped.slice(0, 100))
+    // Filter: only songs by this artist (iTunes search can return fuzzy matches)
+    const singerNameSimplified = toSimplified(String(name || '')).toLowerCase()
+    const filtered = singerNameSimplified
+      ? deduped.filter(s => toSimplified(s.artist).toLowerCase().includes(singerNameSimplified))
+      : deduped
+
+    res.json(filtered.slice(0, 100))
   } catch (e: any) {
     res.status(500).json({ error: e.message || 'get songs failed' })
   }
